@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rogue Tap - Add to Contacts</title>
+<style>
+  :root {
+    --lime: #d4f900;
+    --black: #111111;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--black);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 380px;
+    background: #1a1a1a;
+    border-radius: 18px;
+    padding: 28px 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    text-align: center;
+  }
+  .brand {
+    display: inline-block;
+    background: var(--lime);
+    color: var(--black);
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 2px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+  }
+  h1 {
+    font-size: 22px;
+    margin: 4px 0 2px;
+  }
+  .title {
+    color: #b7b7b7;
+    font-size: 14px;
+    margin: 0 0 2px;
+  }
+  .company {
+    color: var(--lime);
+    font-weight: 600;
+    font-size: 15px;
+    margin: 0 0 18px;
+  }
+  .field {
+    text-align: left;
+    font-size: 14px;
+    padding: 8px 0;
+    border-top: 1px solid #2a2a2a;
+    color: #e6e6e6;
+  }
+  .field span {
+    color: #888;
+    display: inline-block;
+    width: 64px;
+  }
+  .add-btn {
+    display: block;
+    width: 100%;
+    margin-top: 22px;
+    padding: 14px 0;
+    background: var(--lime);
+    color: var(--black);
+    font-weight: 700;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .socials {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 16px;
+  }
+  .socials a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 13px;
+    border: 1px solid #333;
+    padding: 6px 12px;
+    border-radius: 20px;
+  }
+  .empty {
+    color: #999;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .footer {
+    margin-top: 22px;
+    color: #555;
+    font-size: 11px;
+  }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="brand">Rogue Tap</div>
+    <div id="content"><p class="empty">Loading contact...</p></div>
+  </div>
+
+<script>
+function qp(name) {
+  const v = new URLSearchParams(window.location.search).get(name);
+  return v ? decodeURIComponent(v) : "";
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+const fields = {
+  name: qp("n"),
+  title: qp("t"),
+  company: qp("c"),
+  phone: qp("p"),
+  email: qp("e"),
+  facebook: qp("f"),
+  instagram: qp("i"),
+  linkedin: qp("l"),
+};
+
+const content = document.getElementById("content");
+
+if (!fields.name) {
+  content.innerHTML = '<p class="empty">This is a Rogue Tap contact page.<br>Tap a Rogue Tap card against your phone to see a contact here.</p>';
+} else {
+  let html = "";
+  html += `<h1>${escapeHtml(fields.name)}</h1>`;
+  if (fields.title) html += `<p class="title">${escapeHtml(fields.title)}</p>`;
+  if (fields.company) html += `<p class="company">${escapeHtml(fields.company)}</p>`;
+
+  if (fields.phone) html += `<div class="field"><span>Phone</span>${escapeHtml(fields.phone)}</div>`;
+  if (fields.email) html += `<div class="field"><span>Email</span>${escapeHtml(fields.email)}</div>`;
+
+  html += `<a class="add-btn" id="addBtn" href="#">+ Add to Contacts</a>`;
+
+  let socials = "";
+  if (fields.facebook) socials += `<a href="${escapeHtml(fields.facebook)}" target="_blank" rel="noopener">Facebook</a>`;
+  if (fields.instagram) socials += `<a href="${escapeHtml(fields.instagram)}" target="_blank" rel="noopener">Instagram</a>`;
+  if (fields.linkedin) socials += `<a href="${escapeHtml(fields.linkedin)}" target="_blank" rel="noopener">LinkedIn</a>`;
+  if (socials) html += `<div class="socials">${socials}</div>`;
+
+  content.innerHTML = html;
+
+  // Build the vCard text and wire up the Add to Contacts link.
+  // A data: URI with a text/vcard MIME type is what makes iOS Safari
+  // offer the native "Add Contact" screen when tapped.
+  const lines = ["BEGIN:VCARD", "VERSION:3.0"];
+  lines.push(`FN:${fields.name}`);
+  if (fields.company) lines.push(`ORG:${fields.company}`);
+  if (fields.title) lines.push(`TITLE:${fields.title}`);
+  if (fields.phone) lines.push(`TEL;TYPE=CELL:${fields.phone}`);
+  if (fields.email) lines.push(`EMAIL:${fields.email}`);
+  if (fields.facebook) lines.push(`URL;TYPE=Facebook:${fields.facebook}`);
+  if (fields.instagram) lines.push(`URL;TYPE=Instagram:${fields.instagram}`);
+  if (fields.linkedin) lines.push(`URL;TYPE=LinkedIn:${fields.linkedin}`);
+  lines.push("END:VCARD");
+  const vcard = lines.join("\r\n");
+
+  const dataUri = "data:text/vcard;charset=utf-8," + encodeURIComponent(vcard);
+  const safeFileName = fields.name.replace(/[^a-z0-9]+/gi, "_") || "contact";
+  const addBtn = document.getElementById("addBtn");
+  addBtn.setAttribute("href", dataUri);
+  addBtn.setAttribute("download", safeFileName + ".vcf");
+}
+</script>
+</body>
+</html>
