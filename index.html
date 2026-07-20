@@ -131,6 +131,7 @@ const fields = {
   company: qp("c"),
   phone: qp("p"),
   email: qp("e"),
+  roguetap: qp("r"),
   facebook: qp("f"),
   instagram: qp("i"),
   linkedin: qp("l"),
@@ -152,6 +153,7 @@ if (!fields.name) {
   html += `<a class="add-btn" id="addBtn" href="#">+ Add to Contacts</a>`;
 
   let socials = "";
+  if (fields.roguetap) socials += `<a href="${escapeHtml(fields.roguetap)}" target="_blank" rel="noopener">Rogue Tap</a>`;
   if (fields.facebook) socials += `<a href="${escapeHtml(fields.facebook)}" target="_blank" rel="noopener">Facebook</a>`;
   if (fields.instagram) socials += `<a href="${escapeHtml(fields.instagram)}" target="_blank" rel="noopener">Instagram</a>`;
   if (fields.linkedin) socials += `<a href="${escapeHtml(fields.linkedin)}" target="_blank" rel="noopener">LinkedIn</a>`;
@@ -168,6 +170,7 @@ if (!fields.name) {
   if (fields.title) lines.push(`TITLE:${fields.title}`);
   if (fields.phone) lines.push(`TEL;TYPE=CELL:${fields.phone}`);
   if (fields.email) lines.push(`EMAIL:${fields.email}`);
+  if (fields.roguetap) lines.push(`URL;TYPE=RogueTap:${fields.roguetap}`);
   if (fields.facebook) lines.push(`URL;TYPE=Facebook:${fields.facebook}`);
   if (fields.instagram) lines.push(`URL;TYPE=Instagram:${fields.instagram}`);
   if (fields.linkedin) lines.push(`URL;TYPE=LinkedIn:${fields.linkedin}`);
