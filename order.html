@@ -112,6 +112,21 @@
     outline: none;
     border-color: var(--lime);
   }
+  .field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    background: #111;
+    color: #fff;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+  }
+  .field textarea:focus {
+    outline: none;
+    border-color: var(--lime);
+  }
   .hint {
     color: #777;
     font-size: 12px;
@@ -207,6 +222,10 @@
           For Website, Facebook, Instagram and LinkedIn, paste your link in place of the
           "https://" that's already there, or leave it as "https://" to skip that one.
         </div>
+        <div class="field">
+          <label>Delivery address</label>
+          <textarea id="f_address" rows="3" placeholder="Where should we send your card?"></textarea>
+        </div>
         <button type="submit" class="submit">Submit my details</button>
       </form>
     </div>
@@ -227,6 +246,10 @@
           people land on after they search for your business on Google and hit "Write a review".
           Not sure how to get it? Leave it as "https://" and we'll find it for you.
         </div>
+        <div class="field">
+          <label>Delivery address</label>
+          <textarea id="g_address" rows="3" placeholder="Where should we send your card or plate?"></textarea>
+        </div>
         <button type="submit" class="submit">Submit my details</button>
       </form>
     </div>
@@ -246,6 +269,10 @@
           Paste your TripAdvisor page link in place of the "https://" above - the one with
           your business's "Write a Review" button. Not sure how to get it? Leave it as
           "https://" and we'll find it for you.
+        </div>
+        <div class="field">
+          <label>Delivery address</label>
+          <textarea id="t_address" rows="3" placeholder="Where should we send your card or plate?"></textarea>
         </div>
         <button type="submit" class="submit">Submit my details</button>
       </form>
@@ -313,8 +340,9 @@ document.getElementById("contactForm").addEventListener("submit", function (e) {
   const facebook = urlVal("f_facebook");
   const instagram = urlVal("f_instagram");
   const linkedin = urlVal("f_linkedin");
+  const address = val("f_address");
 
-  if (!name && !title && !company && !phone && !email && !website && !facebook && !instagram && !linkedin) {
+  if (!name && !title && !company && !phone && !email && !website && !facebook && !instagram && !linkedin && !address) {
     alert("Please fill in at least one detail before submitting.");
     return;
   }
@@ -329,6 +357,8 @@ document.getElementById("contactForm").addEventListener("submit", function (e) {
   if (facebook) lines.push("Facebook: " + facebook);
   if (instagram) lines.push("Instagram: " + instagram);
   if (linkedin) lines.push("LinkedIn: " + linkedin);
+  lines.push("");
+  lines.push("Delivery address: " + (address || "(not provided)"));
 
   sendMail("New Rogue Tap card order" + (name ? " - " + name : ""), lines.join("\n"));
 });
@@ -339,15 +369,18 @@ document.getElementById("googleForm").addEventListener("submit", function (e) {
 
   const business = val("g_business");
   const link = urlVal("g_link");
+  const address = val("g_address");
 
-  if (!business && !link) {
-    alert("Please fill in at least the business name or your review link before submitting.");
+  if (!business && !link && !address) {
+    alert("Please fill in at least the business name, your review link, or a delivery address before submitting.");
     return;
   }
 
   const lines = ["New Rogue Tap Google Review card order", ""];
   if (business) lines.push("Business name: " + business);
   lines.push("Google Review link: " + (link || "(not provided - please look this up)"));
+  lines.push("");
+  lines.push("Delivery address: " + (address || "(not provided)"));
 
   sendMail("New Rogue Tap Google Review card order" + (business ? " - " + business : ""), lines.join("\n"));
 });
@@ -358,15 +391,18 @@ document.getElementById("tripadvisorForm").addEventListener("submit", function (
 
   const business = val("t_business");
   const link = urlVal("t_link");
+  const address = val("t_address");
 
-  if (!business && !link) {
-    alert("Please fill in at least the business name or your review link before submitting.");
+  if (!business && !link && !address) {
+    alert("Please fill in at least the business name, your review link, or a delivery address before submitting.");
     return;
   }
 
   const lines = ["New Rogue Tap TripAdvisor Review card order", ""];
   if (business) lines.push("Business name: " + business);
   lines.push("TripAdvisor Review link: " + (link || "(not provided - please look this up)"));
+  lines.push("");
+  lines.push("Delivery address: " + (address || "(not provided)"));
 
   sendMail("New Rogue Tap TripAdvisor Review card order" + (business ? " - " + business : ""), lines.join("\n"));
 });
