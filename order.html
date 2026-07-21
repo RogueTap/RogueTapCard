@@ -165,10 +165,10 @@
 
     <!-- Tab 1: standard contact card -->
     <div class="tab-panel active" id="panel-contact">
-      <form id="contactForm">
+      <form id="contactForm" novalidate>
         <div class="field">
-          <label>Full name <span class="req">*</span></label>
-          <input type="text" id="f_name" placeholder="Jane Smith" required>
+          <label>Full name</label>
+          <input type="text" id="f_name" placeholder="Jane Smith">
         </div>
         <div class="field">
           <label>Job title</label>
@@ -184,28 +184,28 @@
         </div>
         <div class="field">
           <label>Email</label>
-          <input type="email" id="f_email" placeholder="jane@acme.com">
+          <input type="text" id="f_email" placeholder="jane@acme.com">
         </div>
         <div class="field">
           <label>Website</label>
-          <input type="url" id="f_website" value="https://">
+          <input type="text" id="f_website" value="https://">
         </div>
         <div class="field">
           <label>Facebook</label>
-          <input type="url" id="f_facebook" value="https://">
+          <input type="text" id="f_facebook" value="https://">
         </div>
         <div class="field">
           <label>Instagram</label>
-          <input type="url" id="f_instagram" value="https://">
+          <input type="text" id="f_instagram" value="https://">
         </div>
         <div class="field">
           <label>LinkedIn</label>
-          <input type="url" id="f_linkedin" value="https://">
+          <input type="text" id="f_linkedin" value="https://">
         </div>
         <div class="hint">
-          For Website, Facebook, Instagram and LinkedIn - just paste your link in place of the
-          "https://" that's already there. Leave any of them as "https://" with nothing added
-          if you don't want that one on your card.
+          Fill in as many or as few of these as you like - even just one detail is fine.
+          For Website, Facebook, Instagram and LinkedIn, paste your link in place of the
+          "https://" that's already there, or leave it as "https://" to skip that one.
         </div>
         <button type="submit" class="submit">Submit my details</button>
       </form>
@@ -213,14 +213,14 @@
 
     <!-- Tab 2: Google Review card -->
     <div class="tab-panel" id="panel-google">
-      <form id="googleForm">
+      <form id="googleForm" novalidate>
         <div class="field">
-          <label>Business name <span class="req">*</span></label>
-          <input type="text" id="g_business" placeholder="Acme Coffee Shop" required>
+          <label>Business name</label>
+          <input type="text" id="g_business" placeholder="Acme Coffee Shop">
         </div>
         <div class="field">
           <label>Your Google Review link</label>
-          <input type="url" id="g_link" value="https://">
+          <input type="text" id="g_link" value="https://">
         </div>
         <div class="hint">
           Paste your Google Review link in place of the "https://" above - this is the link
@@ -233,14 +233,14 @@
 
     <!-- Tab 3: TripAdvisor Review card -->
     <div class="tab-panel" id="panel-tripadvisor">
-      <form id="tripadvisorForm">
+      <form id="tripadvisorForm" novalidate>
         <div class="field">
-          <label>Business name <span class="req">*</span></label>
-          <input type="text" id="t_business" placeholder="Acme Coffee Shop" required>
+          <label>Business name</label>
+          <input type="text" id="t_business" placeholder="Acme Coffee Shop">
         </div>
         <div class="field">
           <label>Your TripAdvisor Review link</label>
-          <input type="url" id="t_link" value="https://">
+          <input type="text" id="t_link" value="https://">
         </div>
         <div class="hint">
           Paste your TripAdvisor page link in place of the "https://" above - the one with
@@ -300,64 +300,75 @@ function sendMail(subject, body) {
     "&body=" + encodeURIComponent(body);
 }
 
-// Tab 1: standard contact card
+// Tab 1: standard contact card - any subset of fields is fine, even just one.
 document.getElementById("contactForm").addEventListener("submit", function (e) {
   e.preventDefault();
 
   const name = val("f_name");
-  if (!name) {
-    alert("Please enter a full name before submitting.");
+  const title = val("f_title");
+  const company = val("f_company");
+  const phone = val("f_phone");
+  const email = val("f_email");
+  const website = urlVal("f_website");
+  const facebook = urlVal("f_facebook");
+  const instagram = urlVal("f_instagram");
+  const linkedin = urlVal("f_linkedin");
+
+  if (!name && !title && !company && !phone && !email && !website && !facebook && !instagram && !linkedin) {
+    alert("Please fill in at least one detail before submitting.");
     return;
   }
 
   const lines = ["New Rogue Tap card order", ""];
-  lines.push("Name: " + name);
-  const title = val("f_title"); if (title) lines.push("Job title: " + title);
-  const company = val("f_company"); if (company) lines.push("Company: " + company);
-  const phone = val("f_phone"); if (phone) lines.push("Phone: " + phone);
-  const email = val("f_email"); if (email) lines.push("Email: " + email);
-  const website = urlVal("f_website"); if (website) lines.push("Website: " + website);
-  const facebook = urlVal("f_facebook"); if (facebook) lines.push("Facebook: " + facebook);
-  const instagram = urlVal("f_instagram"); if (instagram) lines.push("Instagram: " + instagram);
-  const linkedin = urlVal("f_linkedin"); if (linkedin) lines.push("LinkedIn: " + linkedin);
+  if (name) lines.push("Name: " + name);
+  if (title) lines.push("Job title: " + title);
+  if (company) lines.push("Company: " + company);
+  if (phone) lines.push("Phone: " + phone);
+  if (email) lines.push("Email: " + email);
+  if (website) lines.push("Website: " + website);
+  if (facebook) lines.push("Facebook: " + facebook);
+  if (instagram) lines.push("Instagram: " + instagram);
+  if (linkedin) lines.push("LinkedIn: " + linkedin);
 
-  sendMail("New Rogue Tap card order - " + name, lines.join("\n"));
+  sendMail("New Rogue Tap card order" + (name ? " - " + name : ""), lines.join("\n"));
 });
 
-// Tab 2: Google Review card
+// Tab 2: Google Review card - business name and/or link, either is fine.
 document.getElementById("googleForm").addEventListener("submit", function (e) {
   e.preventDefault();
 
   const business = val("g_business");
-  if (!business) {
-    alert("Please enter a business name before submitting.");
+  const link = urlVal("g_link");
+
+  if (!business && !link) {
+    alert("Please fill in at least the business name or your review link before submitting.");
     return;
   }
 
   const lines = ["New Rogue Tap Google Review card order", ""];
-  lines.push("Business name: " + business);
-  const link = urlVal("g_link");
+  if (business) lines.push("Business name: " + business);
   lines.push("Google Review link: " + (link || "(not provided - please look this up)"));
 
-  sendMail("New Rogue Tap Google Review card order - " + business, lines.join("\n"));
+  sendMail("New Rogue Tap Google Review card order" + (business ? " - " + business : ""), lines.join("\n"));
 });
 
-// Tab 3: TripAdvisor Review card
+// Tab 3: TripAdvisor Review card - business name and/or link, either is fine.
 document.getElementById("tripadvisorForm").addEventListener("submit", function (e) {
   e.preventDefault();
 
   const business = val("t_business");
-  if (!business) {
-    alert("Please enter a business name before submitting.");
+  const link = urlVal("t_link");
+
+  if (!business && !link) {
+    alert("Please fill in at least the business name or your review link before submitting.");
     return;
   }
 
   const lines = ["New Rogue Tap TripAdvisor Review card order", ""];
-  lines.push("Business name: " + business);
-  const link = urlVal("t_link");
+  if (business) lines.push("Business name: " + business);
   lines.push("TripAdvisor Review link: " + (link || "(not provided - please look this up)"));
 
-  sendMail("New Rogue Tap TripAdvisor Review card order - " + business, lines.join("\n"));
+  sendMail("New Rogue Tap TripAdvisor Review card order" + (business ? " - " + business : ""), lines.join("\n"));
 });
 </script>
 </body>
