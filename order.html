@@ -272,14 +272,27 @@ function urlVal(id) {
 // Tab switching
 const tabBtns = document.querySelectorAll(".tab-btn");
 const panels = { contact: "panel-contact", google: "panel-google", tripadvisor: "panel-tripadvisor" };
+
+function selectTab(name) {
+  if (!panels[name]) return;
+  tabBtns.forEach(b => b.classList.remove("active"));
+  Object.values(panels).forEach(id => document.getElementById(id).classList.remove("active"));
+  const btn = document.querySelector('.tab-btn[data-tab="' + name + '"]');
+  if (btn) btn.classList.add("active");
+  document.getElementById(panels[name]).classList.add("active");
+}
+
 tabBtns.forEach(btn => {
   btn.addEventListener("click", function () {
-    tabBtns.forEach(b => b.classList.remove("active"));
-    Object.values(panels).forEach(id => document.getElementById(id).classList.remove("active"));
-    btn.classList.add("active");
-    document.getElementById(panels[btn.dataset.tab]).classList.add("active");
+    selectTab(btn.dataset.tab);
   });
 });
+
+// Deep-link support: order.html?tab=google or order.html?tab=tripadvisor
+// opens straight onto that tab, so a link from the Google Reviews or
+// TripAdvisor sections of the sales page lands in the right place.
+const requestedTab = new URLSearchParams(window.location.search).get("tab");
+if (requestedTab) selectTab(requestedTab);
 
 function sendMail(subject, body) {
   window.location.href =
