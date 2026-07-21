@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rogue Tap - Tap Connect Grow</title>
+<meta name="description" content="Rogue Tap NFC business cards - tap your card against any phone to share your contact details, website and socials instantly. No app needed.">
+<style>
+  :root {
+    --lime: #d4f900;
+    --black: #111111;
+    --panel: #1a1a1a;
+    --text-dim: #b7b7b7;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--black);
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    scroll-behavior: smooth;
+  }
+  a { color: inherit; }
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* Nav */
+  nav.top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+  }
+  .nav-logo {
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 1px;
+  }
+  .nav-logo .tap-chip {
+    background: var(--lime);
+    color: var(--black);
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-left: 4px;
+  }
+  nav.top a.cta-small {
+    background: var(--lime);
+    color: var(--black);
+    font-weight: 700;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    text-decoration: none;
+  }
+
+  /* Hero */
+  header.hero {
+    text-align: center;
+    padding: 50px 0 60px;
+  }
+  .logo-lockup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .logo-rogue {
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: 1px;
+  }
+  .logo-tap {
+    display: inline-block;
+    background: var(--lime);
+    color: var(--black);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    transform: rotate(-4deg);
+  }
+  .tagline-main {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    margin: 4px 0 2px;
+  }
+  .tagline-sub {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--lime);
+    margin: 0 0 30px;
+  }
+  h1 {
+    font-size: 32px;
+    line-height: 1.25;
+    margin: 0 auto 14px;
+    max-width: 600px;
+  }
+  .hero p.sub {
+    color: var(--text-dim);
+    font-size: 16px;
+    max-width: 480px;
+    margin: 0 auto 28px;
+    line-height: 1.6;
+  }
+  .cta-row {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .cta-primary {
+    background: var(--lime);
+    color: var(--black);
+    font-weight: 700;
+    font-size: 15px;
+    padding: 14px 28px;
+    border-radius: 10px;
+    text-decoration: none;
+  }
+  .cta-secondary {
+    border: 1px solid #333;
+    color: #fff;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 14px 28px;
+    border-radius: 10px;
+    text-decoration: none;
+  }
+
+  /* Sections */
+  section {
+    padding: 50px 0;
+    border-top: 1px solid #262626;
+  }
+  section h2 {
+    font-size: 22px;
+    text-align: center;
+    margin: 0 0 10px;
+  }
+  section p.section-sub {
+    text-align: center;
+    color: var(--text-dim);
+    max-width: 480px;
+    margin: 0 auto 36px;
+    line-height: 1.6;
+  }
+
+  /* Steps */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .step {
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 24px 20px;
+    text-align: center;
+  }
+  .step .num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--lime);
+    color: var(--black);
+    font-weight: 800;
+    font-size: 14px;
+    margin-bottom: 14px;
+  }
+  .step h3 {
+    font-size: 15px;
+    margin: 0 0 8px;
+  }
+  .step p {
+    color: var(--text-dim);
+    font-size: 13.5px;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* Features */
+  .features {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+  .feature {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .feature .icon {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .feature h3 {
+    font-size: 14.5px;
+    margin: 0 0 4px;
+  }
+  .feature p {
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* Contact / CTA band */
+  .band {
+    background: var(--panel);
+    border-radius: 18px;
+    padding: 40px 30px;
+    text-align: center;
+  }
+  .band h2 { margin-bottom: 10px; }
+  .band p {
+    color: var(--text-dim);
+    max-width: 420px;
+    margin: 0 auto 24px;
+    line-height: 1.6;
+  }
+
+  footer {
+    padding: 30px 0 50px;
+    text-align: center;
+    color: #555;
+    font-size: 12px;
+  }
+  footer .nav-logo { color: #888; margin-bottom: 6px; }
+
+  @media (max-width: 640px) {
+    .steps, .features { grid-template-columns: 1fr; }
+    .logo-rogue { font-size: 34px; }
+    h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav class="top">
+    <div class="nav-logo">ROGUE<span class="tap-chip">TAP</span></div>
+    <a class="cta-small" href="mailto:roguetap@outlook.com">Get in touch</a>
+  </nav>
+
+  <header class="hero">
+    <div class="logo-lockup">
+      <span class="logo-rogue">ROGUE</span>
+      <span class="logo-tap">TAP</span>
+    </div>
+    <p class="tagline-main">TAP CONNECT GROW</p>
+    <p class="tagline-sub">SMARTER BUSINESS CONNECTIONS</p>
+
+    <h1>Ditch the paper cards. Sell yourself with one tap.</h1>
+    <p class="sub">
+      Rogue Tap is a reusable NFC business card - tap it against any modern
+      phone and your contact details, website and socials land in their
+      hands instantly. No app for them to download, no cards to reprint,
+      no more "sorry, I'm out."
+    </p>
+    <div class="cta-row">
+      <a class="cta-primary" href="mailto:roguetap@outlook.com?subject=I'd%20like%20to%20order%20a%20Rogue%20Tap%20card">Order your card</a>
+      <a class="cta-secondary" href="#how-it-works">See how it works</a>
+    </div>
+  </header>
+
+  <section id="how-it-works">
+    <h2>How it works</h2>
+    <p class="section-sub">No app to download and nothing to scan awkwardly - just a tap.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="num">1</div>
+        <h3>Tap the card</h3>
+        <p>Hold your Rogue Tap card near the back of any modern Android or iPhone.</p>
+      </div>
+      <div class="step">
+        <div class="num">2</div>
+        <h3>Details appear instantly</h3>
+        <p>Your name, company, phone, email, website and socials show up straight away.</p>
+      </div>
+      <div class="step">
+        <div class="num">3</div>
+        <h3>Saved to contacts</h3>
+        <p>One more tap and you're saved in their phone for good - no more lost business cards.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Why people switch to Rogue Tap</h2>
+    <p class="section-sub">Everything a box of paper cards can't do.</p>
+    <div class="features">
+      <div class="feature">
+        <div class="icon" style="background:#37474F;">&#127760;</div>
+        <div>
+          <h3>Works on Android &amp; iPhone</h3>
+          <p>The same card works perfectly on both, with no app required on the receiving end.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="icon" style="background:#1877F2;">&#128279;</div>
+        <div>
+          <h3>Your website &amp; socials</h3>
+          <p>Link straight to your website, Facebook, Instagram and LinkedIn from the same tap.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="icon" style="background:#111111; border:1px solid #333;">&#128274;</div>
+        <div>
+          <h3>Password-protected</h3>
+          <p>Lock your card so only you can update or erase it - your details stay exactly as you set them.</p>
+        </div>
+      </div>
+      <div class="feature">
+        <div class="icon" style="background:#0A66C2;">&#9851;</div>
+        <div>
+          <h3>Rewrite it any time</h3>
+          <p>Changed job, number or company? Update the same card in seconds - nothing to reprint.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>One card. One price. No subscriptions.</h2>
+    <p class="section-sub">
+      Every Rogue Tap card is yours to keep and rewrite as many times as you
+      like - get in touch for pricing, and ask about rates for teams
+      ordering more than one.
+    </p>
+    <div class="band">
+      <h2>Ready to ditch the paper cards?</h2>
+      <p>Email us and we'll get you set up with your own Rogue Tap card.</p>
+      <a class="cta-primary" href="mailto:roguetap@outlook.com?subject=I'd%20like%20to%20order%20a%20Rogue%20Tap%20card">Email roguetap@outlook.com</a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="nav-logo">ROGUE TAP</div>
+    &copy; 2026 Rogue Tap. Smarter business connections.
+  </footer>
+</div>
+
+</body>
+</html>

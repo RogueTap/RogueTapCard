@@ -69,6 +69,20 @@
     display: inline-block;
     width: 64px;
   }
+  .field.icon-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .field.icon-field svg {
+    flex: none;
+    border-radius: 6px;
+  }
+  .field.icon-field a {
+    color: #e6e6e6;
+    text-decoration: none;
+    word-break: break-all;
+  }
   .add-btn {
     display: block;
     width: 100%;
@@ -86,16 +100,15 @@
   .socials {
     display: flex;
     justify-content: center;
-    gap: 14px;
+    gap: 12px;
     margin-top: 16px;
   }
   .socials a {
-    color: #fff;
-    text-decoration: none;
-    font-size: 13px;
-    border: 1px solid #333;
-    padding: 6px 12px;
-    border-radius: 20px;
+    display: inline-flex;
+    line-height: 0;
+  }
+  .socials a svg {
+    border-radius: 9px;
   }
   .empty {
     color: #999;
@@ -125,12 +138,24 @@ function escapeHtml(s) {
   return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 
+// Small logo badges used instead of text labels next to link fields -
+// same look as the desktop app's icon badges, drawn inline so the page
+// stays a single self-contained file with no extra image requests.
+const ICONS = {
+  website: `<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="12" fill="#37474F"/><circle cx="12" cy="12" r="7" fill="none" stroke="#fff" stroke-width="1.3"/><line x1="5" y1="12" x2="19" y2="12" stroke="#fff" stroke-width="1.3"/><ellipse cx="12" cy="12" rx="3" ry="7" fill="none" stroke="#fff" stroke-width="1.3"/></svg>`,
+  roguetap: `<svg viewBox="0 0 24 24" width="22" height="22"><rect width="24" height="24" rx="5" fill="#111111"/><path d="M6.5 15.2 A7 7 0 0 1 17.5 15.2" fill="none" stroke="#d4f900" stroke-width="1.6"/><path d="M8.7 17.3 A4.2 4.2 0 0 1 15.3 17.3" fill="none" stroke="#e6e6e6" stroke-width="1.6"/><circle cx="12" cy="18.6" r="1.3" fill="#d4f900"/></svg>`,
+  facebook: `<svg viewBox="0 0 24 24" width="22" height="22"><rect width="24" height="24" rx="5" fill="#1877F2"/><text x="12" y="17.5" font-size="15" font-weight="700" fill="#fff" text-anchor="middle" font-family="Arial, sans-serif">f</text></svg>`,
+  instagram: `<svg viewBox="0 0 24 24" width="22" height="22"><rect width="24" height="24" rx="5" fill="#C13584"/><rect x="5" y="6" width="14" height="12" rx="3" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="12" r="3.4" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="16" cy="8" r="1" fill="#fff"/></svg>`,
+  linkedin: `<svg viewBox="0 0 24 24" width="22" height="22"><rect width="24" height="24" rx="5" fill="#0A66C2"/><text x="12" y="16.5" font-size="10.5" font-weight="700" fill="#fff" text-anchor="middle" font-family="Arial, sans-serif">in</text></svg>`,
+};
+
 const fields = {
   name: qp("n"),
   title: qp("t"),
   company: qp("c"),
   phone: qp("p"),
   email: qp("e"),
+  website: qp("w"),
   roguetap: qp("r"),
   facebook: qp("f"),
   instagram: qp("i"),
@@ -149,14 +174,15 @@ if (!fields.name) {
 
   if (fields.phone) html += `<div class="field"><span>Phone</span>${escapeHtml(fields.phone)}</div>`;
   if (fields.email) html += `<div class="field"><span>Email</span>${escapeHtml(fields.email)}</div>`;
+  if (fields.website) html += `<div class="field icon-field">${ICONS.website}<a href="${escapeHtml(fields.website)}" target="_blank" rel="noopener">${escapeHtml(fields.website)}</a></div>`;
 
   html += `<a class="add-btn" id="addBtn" href="#">+ Add to Contacts</a>`;
 
   let socials = "";
-  if (fields.roguetap) socials += `<a href="${escapeHtml(fields.roguetap)}" target="_blank" rel="noopener">Rogue Tap</a>`;
-  if (fields.facebook) socials += `<a href="${escapeHtml(fields.facebook)}" target="_blank" rel="noopener">Facebook</a>`;
-  if (fields.instagram) socials += `<a href="${escapeHtml(fields.instagram)}" target="_blank" rel="noopener">Instagram</a>`;
-  if (fields.linkedin) socials += `<a href="${escapeHtml(fields.linkedin)}" target="_blank" rel="noopener">LinkedIn</a>`;
+  if (fields.roguetap) socials += `<a href="${escapeHtml(fields.roguetap)}" target="_blank" rel="noopener" aria-label="Rogue Tap">${ICONS.roguetap}</a>`;
+  if (fields.facebook) socials += `<a href="${escapeHtml(fields.facebook)}" target="_blank" rel="noopener" aria-label="Facebook">${ICONS.facebook}</a>`;
+  if (fields.instagram) socials += `<a href="${escapeHtml(fields.instagram)}" target="_blank" rel="noopener" aria-label="Instagram">${ICONS.instagram}</a>`;
+  if (fields.linkedin) socials += `<a href="${escapeHtml(fields.linkedin)}" target="_blank" rel="noopener" aria-label="LinkedIn">${ICONS.linkedin}</a>`;
   if (socials) html += `<div class="socials">${socials}</div>`;
 
   content.innerHTML = html;
@@ -170,6 +196,7 @@ if (!fields.name) {
   if (fields.title) lines.push(`TITLE:${fields.title}`);
   if (fields.phone) lines.push(`TEL;TYPE=CELL:${fields.phone}`);
   if (fields.email) lines.push(`EMAIL:${fields.email}`);
+  if (fields.website) lines.push(`URL;TYPE=Website:${fields.website}`);
   if (fields.roguetap) lines.push(`URL;TYPE=RogueTap:${fields.roguetap}`);
   if (fields.facebook) lines.push(`URL;TYPE=Facebook:${fields.facebook}`);
   if (fields.instagram) lines.push(`URL;TYPE=Instagram:${fields.instagram}`);
