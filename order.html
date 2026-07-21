@@ -45,13 +45,43 @@
     color: var(--text-dim);
     font-size: 14.5px;
     line-height: 1.6;
-    margin: 0 0 28px;
+    margin: 0 0 24px;
     max-width: 460px;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    flex: 1;
+    min-width: 140px;
+    padding: 12px 10px;
+    background: #1a1a1a;
+    color: #b7b7b7;
+    font-weight: 700;
+    font-size: 13.5px;
+    border: 1px solid #333;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+  }
+  .tab-btn.active {
+    background: var(--lime);
+    color: var(--black);
+    border-color: var(--lime);
   }
   .card {
     background: var(--panel);
     border-radius: 16px;
     padding: 28px 24px;
+  }
+  .tab-panel {
+    display: none;
+  }
+  .tab-panel.active {
+    display: block;
   }
   .field {
     margin-bottom: 18px;
@@ -119,57 +149,108 @@
   <div class="brand">Rogue Tap</div>
   <h1>Tell us what goes on your card</h1>
   <p class="sub">
-    Fill this in with exactly what you want your card to say, then hit submit -
+    Pick the kind of card you want below, fill it in, then hit submit -
     it opens an email with everything laid out clearly, ready to send to us.
     That way there's no back-and-forth or mishearing details over the phone -
     what you type is exactly what goes on your card.
   </p>
 
+  <div class="tabs">
+    <button type="button" class="tab-btn active" data-tab="contact">Tell us what goes on your card</button>
+    <button type="button" class="tab-btn" data-tab="google">Google Review</button>
+    <button type="button" class="tab-btn" data-tab="tripadvisor">TripAdvisor</button>
+  </div>
+
   <div class="card">
-    <form id="orderForm">
-      <div class="field">
-        <label>Full name <span class="req">*</span></label>
-        <input type="text" id="f_name" placeholder="Jane Smith" required>
-      </div>
-      <div class="field">
-        <label>Job title</label>
-        <input type="text" id="f_title" placeholder="Sales Manager">
-      </div>
-      <div class="field">
-        <label>Company</label>
-        <input type="text" id="f_company" placeholder="Acme Ltd">
-      </div>
-      <div class="field">
-        <label>Phone</label>
-        <input type="tel" id="f_phone" placeholder="07123 456789">
-      </div>
-      <div class="field">
-        <label>Email</label>
-        <input type="email" id="f_email" placeholder="jane@acme.com">
-      </div>
-      <div class="field">
-        <label>Website</label>
-        <input type="url" id="f_website" value="https://">
-      </div>
-      <div class="field">
-        <label>Facebook</label>
-        <input type="url" id="f_facebook" value="https://">
-      </div>
-      <div class="field">
-        <label>Instagram</label>
-        <input type="url" id="f_instagram" value="https://">
-      </div>
-      <div class="field">
-        <label>LinkedIn</label>
-        <input type="url" id="f_linkedin" value="https://">
-      </div>
-      <div class="hint">
-        For Website, Facebook, Instagram and LinkedIn - just paste your link in place of the
-        "https://" that's already there. Leave any of them as "https://" with nothing added
-        if you don't want that one on your card.
-      </div>
-      <button type="submit" class="submit">Submit my details</button>
-    </form>
+
+    <!-- Tab 1: standard contact card -->
+    <div class="tab-panel active" id="panel-contact">
+      <form id="contactForm">
+        <div class="field">
+          <label>Full name <span class="req">*</span></label>
+          <input type="text" id="f_name" placeholder="Jane Smith" required>
+        </div>
+        <div class="field">
+          <label>Job title</label>
+          <input type="text" id="f_title" placeholder="Sales Manager">
+        </div>
+        <div class="field">
+          <label>Company</label>
+          <input type="text" id="f_company" placeholder="Acme Ltd">
+        </div>
+        <div class="field">
+          <label>Phone</label>
+          <input type="tel" id="f_phone" placeholder="07123 456789">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="f_email" placeholder="jane@acme.com">
+        </div>
+        <div class="field">
+          <label>Website</label>
+          <input type="url" id="f_website" value="https://">
+        </div>
+        <div class="field">
+          <label>Facebook</label>
+          <input type="url" id="f_facebook" value="https://">
+        </div>
+        <div class="field">
+          <label>Instagram</label>
+          <input type="url" id="f_instagram" value="https://">
+        </div>
+        <div class="field">
+          <label>LinkedIn</label>
+          <input type="url" id="f_linkedin" value="https://">
+        </div>
+        <div class="hint">
+          For Website, Facebook, Instagram and LinkedIn - just paste your link in place of the
+          "https://" that's already there. Leave any of them as "https://" with nothing added
+          if you don't want that one on your card.
+        </div>
+        <button type="submit" class="submit">Submit my details</button>
+      </form>
+    </div>
+
+    <!-- Tab 2: Google Review card -->
+    <div class="tab-panel" id="panel-google">
+      <form id="googleForm">
+        <div class="field">
+          <label>Business name <span class="req">*</span></label>
+          <input type="text" id="g_business" placeholder="Acme Coffee Shop" required>
+        </div>
+        <div class="field">
+          <label>Your Google Review link</label>
+          <input type="url" id="g_link" value="https://">
+        </div>
+        <div class="hint">
+          Paste your Google Review link in place of the "https://" above - this is the link
+          people land on after they search for your business on Google and hit "Write a review".
+          Not sure how to get it? Leave it as "https://" and we'll find it for you.
+        </div>
+        <button type="submit" class="submit">Submit my details</button>
+      </form>
+    </div>
+
+    <!-- Tab 3: TripAdvisor Review card -->
+    <div class="tab-panel" id="panel-tripadvisor">
+      <form id="tripadvisorForm">
+        <div class="field">
+          <label>Business name <span class="req">*</span></label>
+          <input type="text" id="t_business" placeholder="Acme Coffee Shop" required>
+        </div>
+        <div class="field">
+          <label>Your TripAdvisor Review link</label>
+          <input type="url" id="t_link" value="https://">
+        </div>
+        <div class="hint">
+          Paste your TripAdvisor page link in place of the "https://" above - the one with
+          your business's "Write a Review" button. Not sure how to get it? Leave it as
+          "https://" and we'll find it for you.
+        </div>
+        <button type="submit" class="submit">Submit my details</button>
+      </form>
+    </div>
+
     <p class="note">
       This opens a pre-filled email in your email app - just hit send from there
       and we'll take it from there.
@@ -188,7 +269,26 @@ function urlVal(id) {
   return v.toLowerCase() === "https://" ? "" : v;
 }
 
-document.getElementById("orderForm").addEventListener("submit", function (e) {
+// Tab switching
+const tabBtns = document.querySelectorAll(".tab-btn");
+const panels = { contact: "panel-contact", google: "panel-google", tripadvisor: "panel-tripadvisor" };
+tabBtns.forEach(btn => {
+  btn.addEventListener("click", function () {
+    tabBtns.forEach(b => b.classList.remove("active"));
+    Object.values(panels).forEach(id => document.getElementById(id).classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(panels[btn.dataset.tab]).classList.add("active");
+  });
+});
+
+function sendMail(subject, body) {
+  window.location.href =
+    "mailto:roguetap@outlook.com?subject=" + encodeURIComponent(subject) +
+    "&body=" + encodeURIComponent(body);
+}
+
+// Tab 1: standard contact card
+document.getElementById("contactForm").addEventListener("submit", function (e) {
   e.preventDefault();
 
   const name = val("f_name");
@@ -208,11 +308,43 @@ document.getElementById("orderForm").addEventListener("submit", function (e) {
   const instagram = urlVal("f_instagram"); if (instagram) lines.push("Instagram: " + instagram);
   const linkedin = urlVal("f_linkedin"); if (linkedin) lines.push("LinkedIn: " + linkedin);
 
-  const subject = "New Rogue Tap card order - " + name;
-  const body = lines.join("\n");
-  window.location.href =
-    "mailto:roguetap@outlook.com?subject=" + encodeURIComponent(subject) +
-    "&body=" + encodeURIComponent(body);
+  sendMail("New Rogue Tap card order - " + name, lines.join("\n"));
+});
+
+// Tab 2: Google Review card
+document.getElementById("googleForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const business = val("g_business");
+  if (!business) {
+    alert("Please enter a business name before submitting.");
+    return;
+  }
+
+  const lines = ["New Rogue Tap Google Review card order", ""];
+  lines.push("Business name: " + business);
+  const link = urlVal("g_link");
+  lines.push("Google Review link: " + (link || "(not provided - please look this up)"));
+
+  sendMail("New Rogue Tap Google Review card order - " + business, lines.join("\n"));
+});
+
+// Tab 3: TripAdvisor Review card
+document.getElementById("tripadvisorForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const business = val("t_business");
+  if (!business) {
+    alert("Please enter a business name before submitting.");
+    return;
+  }
+
+  const lines = ["New Rogue Tap TripAdvisor Review card order", ""];
+  lines.push("Business name: " + business);
+  const link = urlVal("t_link");
+  lines.push("TripAdvisor Review link: " + (link || "(not provided - please look this up)"));
+
+  sendMail("New Rogue Tap TripAdvisor Review card order - " + business, lines.join("\n"));
 });
 </script>
 </body>
