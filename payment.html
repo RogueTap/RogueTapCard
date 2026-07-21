@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rogue Tap - Complete your payment</title>
+<meta name="description" content="Complete payment to confirm your Rogue Tap card order.">
+<style>
+  :root {
+    --lime: #d4f900;
+    --black: #111111;
+    --panel: #1a1a1a;
+    --text-dim: #b7b7b7;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--black);
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  .wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 60px 24px 60px;
+    text-align: center;
+  }
+  .brand {
+    display: inline-block;
+    background: var(--lime);
+    color: var(--black);
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 2px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+  .tick {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--lime);
+    color: var(--black);
+    font-size: 28px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+  }
+  h1 {
+    font-size: 24px;
+    margin: 0 0 12px;
+  }
+  p.sub {
+    color: var(--text-dim);
+    font-size: 14.5px;
+    line-height: 1.6;
+    margin: 0 0 30px;
+  }
+  .card {
+    background: var(--panel);
+    border-radius: 16px;
+    padding: 30px 24px;
+  }
+  a.pay-btn, button.pay-btn {
+    display: block;
+    width: 100%;
+    padding: 16px 0;
+    background: var(--lime);
+    color: var(--black);
+    font-weight: 700;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .pay-btn.disabled {
+    background: #333;
+    color: #999;
+    cursor: default;
+  }
+  .note {
+    color: var(--text-dim);
+    font-size: 12.5px;
+    line-height: 1.6;
+    margin-top: 18px;
+  }
+  .footer {
+    text-align: center;
+    color: #555;
+    font-size: 11px;
+    margin-top: 30px;
+  }
+  .footer a { color: #777; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Rogue Tap</div>
+  <div class="tick">&#10003;</div>
+  <h1>Thanks - your details are in</h1>
+  <p class="sub">
+    Your order should have just opened in your email app - if it hasn't sent yet,
+    just hit send from there. One more step: please complete payment below to get
+    your card or plate into production.
+  </p>
+
+  <div class="card">
+    <a class="pay-btn" id="payBtn" href="#">Pay now</a>
+    <p class="note" id="payNote">Loading payment link...</p>
+  </div>
+
+  <div class="footer">
+    Questions? Email <a href="mailto:roguetap@outlook.com">roguetap@outlook.com</a><br>
+    &copy; 2026 Rogue Tap. Smarter business connections.
+  </div>
+</div>
+
+<script>
+// Set this once the payment provider link is ready - e.g. a Stripe Payment
+// Link, SumUp, PayPal.me or Square checkout URL. Leave blank until then and
+// the page falls back to a clear "coming soon" message instead of a dead link.
+const PAYMENT_LINK_URL = "";
+
+const payBtn = document.getElementById("payBtn");
+const payNote = document.getElementById("payNote");
+
+if (PAYMENT_LINK_URL) {
+  payBtn.href = PAYMENT_LINK_URL;
+  payNote.textContent = "You'll be taken to our secure payment page.";
+} else {
+  payBtn.classList.add("disabled");
+  payBtn.removeAttribute("href");
+  payBtn.addEventListener("click", function (e) {
+    e.preventDefault();
+  });
+  payNote.textContent = "We're setting up online payment right now - we'll be in touch shortly to take payment for your order.";
+}
+</script>
+</body>
+</html>

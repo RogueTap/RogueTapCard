@@ -322,9 +322,15 @@ const requestedTab = new URLSearchParams(window.location.search).get("tab");
 if (requestedTab) selectTab(requestedTab);
 
 function sendMail(subject, body) {
+  // Open the pre-filled email (this triggers the mail app without leaving
+  // the page), then move on to the payment step. Once we have a real
+  // payment link wired up, this is where customers land to pay.
   window.location.href =
     "mailto:roguetap@outlook.com?subject=" + encodeURIComponent(subject) +
     "&body=" + encodeURIComponent(body);
+  setTimeout(function () {
+    window.location.href = "payment.html";
+  }, 600);
 }
 
 // Tab 1: standard contact card - any subset of fields is fine, even just one.
