@@ -212,7 +212,9 @@ if (type === "google" || type === "tripadvisor") {
   const name = qp("n");
   const title = qp("t");
   const company = qp("c");
-  const phone = qp("p");
+  const mobile = qp("m");
+  const personal = qp("h");
+  const work = qp("k");
   const email = qp("e");
   const website = qp("w");
   const facebook = qp("f");
@@ -222,14 +224,16 @@ if (type === "google" || type === "tripadvisor") {
 
   backLink.href = "order.html";
 
-  if (!name && !title && !company && !phone && !email && !website && !facebook && !instagram && !linkedin) {
+  if (!name && !title && !company && !mobile && !personal && !work && !email && !website && !facebook && !instagram && !linkedin) {
     previewCard.innerHTML = '<p class="empty">No details were entered.</p>';
   } else {
     let html = "";
     html += `<h2 class="name">${escapeHtml(name || "(no name given)")}</h2>`;
     if (title) html += `<p class="title">${escapeHtml(title)}</p>`;
     if (company) html += `<p class="company">${escapeHtml(company)}</p>`;
-    if (phone) html += `<div class="field"><span>Phone</span>${escapeHtml(phone)}</div>`;
+    if (mobile) html += `<div class="field"><span>Mobile</span>${escapeHtml(mobile)}</div>`;
+    if (personal) html += `<div class="field"><span>Personal</span>${escapeHtml(personal)}</div>`;
+    if (work) html += `<div class="field"><span>Work</span>${escapeHtml(work)}</div>`;
     if (email) html += `<div class="field"><span>Email</span>${escapeHtml(email)}</div>`;
     if (website) html += `<div class="field icon-field">${ICONS.website}<a href="${escapeHtml(website)}" target="_blank" rel="noopener">${escapeHtml(website)}</a></div>`;
 
@@ -251,7 +255,9 @@ if (type === "google" || type === "tripadvisor") {
   if (name) lines.push("Name: " + name);
   if (title) lines.push("Job title: " + title);
   if (company) lines.push("Company: " + company);
-  if (phone) lines.push("Phone: " + phone);
+  if (mobile) lines.push("Mobile phone: " + mobile);
+  if (personal) lines.push("Personal phone: " + personal);
+  if (work) lines.push("Work phone: " + work);
   if (email) lines.push("Email: " + email);
   if (website) lines.push("Website: " + website);
   if (facebook) lines.push("Facebook: " + facebook);

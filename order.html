@@ -231,8 +231,16 @@
           <input type="text" id="f_company" placeholder="Acme Ltd">
         </div>
         <div class="field">
-          <label>Phone</label>
-          <input type="tel" id="f_phone" placeholder="07123 456789">
+          <label>Mobile phone</label>
+          <input type="tel" id="f_mobile" placeholder="07123 456789">
+        </div>
+        <div class="field">
+          <label>Personal phone</label>
+          <input type="tel" id="f_personal" placeholder="Optional">
+        </div>
+        <div class="field">
+          <label>Work phone</label>
+          <input type="tel" id="f_work" placeholder="Optional">
         </div>
         <div class="field">
           <label>Email</label>
@@ -393,7 +401,9 @@ document.getElementById("contactForm").addEventListener("submit", function (e) {
   const name = val("f_name");
   const title = val("f_title");
   const company = val("f_company");
-  const phone = val("f_phone");
+  const mobile = val("f_mobile");
+  const personal = val("f_personal");
+  const work = val("f_work");
   const email = val("f_email");
   const website = urlVal("f_website");
   const facebook = urlVal("f_facebook");
@@ -401,7 +411,7 @@ document.getElementById("contactForm").addEventListener("submit", function (e) {
   const linkedin = urlVal("f_linkedin");
   const address = val("f_address");
 
-  if (!name && !title && !company && !phone && !email && !website && !facebook && !instagram && !linkedin && !address) {
+  if (!name && !title && !company && !mobile && !personal && !work && !email && !website && !facebook && !instagram && !linkedin && !address) {
     alert("Please fill in at least one detail before submitting.");
     return;
   }
@@ -411,7 +421,9 @@ document.getElementById("contactForm").addEventListener("submit", function (e) {
   if (name) params.set("n", name);
   if (title) params.set("t", title);
   if (company) params.set("c", company);
-  if (phone) params.set("p", phone);
+  if (mobile) params.set("m", mobile);
+  if (personal) params.set("h", personal);
+  if (work) params.set("k", work);
   if (email) params.set("e", email);
   if (website) params.set("w", website);
   if (facebook) params.set("f", facebook);
