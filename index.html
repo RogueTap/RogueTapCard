@@ -166,7 +166,10 @@ const fields = {
 const content = document.getElementById("content");
 
 if (!fields.name) {
-  content.innerHTML = '<p class="empty">This is a Rogue Tap contact page.<br>Tap a Rogue Tap card against your phone to see a contact here.</p>';
+  // No card data in the URL - this is someone visiting the domain
+  // directly (not tapping a card), so send them to the sales page
+  // instead of showing a dead-end message.
+  window.location.href = "home.html";
 } else {
   let html = "";
   html += `<h1>${escapeHtml(fields.name)}</h1>`;
