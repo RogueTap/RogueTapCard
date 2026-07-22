@@ -201,9 +201,10 @@
   <h1>Tell us what goes on your card</h1>
   <p class="sub">
     Pick the kind of card you want below, fill it in, then hit submit -
-    it opens an email with everything laid out clearly, ready to send to us.
-    That way there's no back-and-forth or mishearing details over the phone -
-    what you type is exactly what goes on your card.
+    you'll see a preview of exactly what will be on your card, then confirm
+    to send it through to us. That way there's no back-and-forth or
+    mishearing details over the phone - what you type is exactly what goes
+    on your card.
   </p>
 
   <div class="tabs">
@@ -339,8 +340,8 @@
     </div>
 
     <p class="note">
-      This opens a pre-filled email in your email app - just hit send from there
-      and we'll take it from there.
+      You'll see a preview of your card next - check it over, then confirm
+      to send it through to us.
     </p>
   </div>
 
@@ -381,16 +382,8 @@ tabBtns.forEach(btn => {
 const requestedTab = new URLSearchParams(window.location.search).get("tab");
 if (requestedTab) selectTab(requestedTab);
 
-function sendMail(subject, body) {
-  // Open the pre-filled email (this triggers the mail app without leaving
-  // the page), then move on to the payment step. Once we have a real
-  // payment link wired up, this is where customers land to pay.
-  window.location.href =
-    "mailto:roguetap@outlook.com?subject=" + encodeURIComponent(subject) +
-    "&body=" + encodeURIComponent(body);
-  setTimeout(function () {
-    window.location.href = "payment.html";
-  }, 600);
+function goToPreview(params) {
+  window.location.href = "preview.html?" + params.toString();
 }
 
 // Tab 1: standard contact card - any subset of fields is fine, even just one.
@@ -413,20 +406,20 @@ document.getElementById("contactForm").addEventListener("submit", function (e) {
     return;
   }
 
-  const lines = ["New Rogue Tap card order", ""];
-  if (name) lines.push("Name: " + name);
-  if (title) lines.push("Job title: " + title);
-  if (company) lines.push("Company: " + company);
-  if (phone) lines.push("Phone: " + phone);
-  if (email) lines.push("Email: " + email);
-  if (website) lines.push("Website: " + website);
-  if (facebook) lines.push("Facebook: " + facebook);
-  if (instagram) lines.push("Instagram: " + instagram);
-  if (linkedin) lines.push("LinkedIn: " + linkedin);
-  lines.push("");
-  lines.push("Delivery address: " + (address || "(not provided)"));
+  const params = new URLSearchParams();
+  params.set("type", "contact");
+  if (name) params.set("n", name);
+  if (title) params.set("t", title);
+  if (company) params.set("c", company);
+  if (phone) params.set("p", phone);
+  if (email) params.set("e", email);
+  if (website) params.set("w", website);
+  if (facebook) params.set("f", facebook);
+  if (instagram) params.set("i", instagram);
+  if (linkedin) params.set("l", linkedin);
+  if (address) params.set("addr", address);
 
-  sendMail("New Rogue Tap card order" + (name ? " - " + name : ""), lines.join("\n"));
+  goToPreview(params);
 });
 
 // Tab 2: Google Review card - business name and/or link, either is fine.
@@ -442,13 +435,13 @@ document.getElementById("googleForm").addEventListener("submit", function (e) {
     return;
   }
 
-  const lines = ["New Rogue Tap Google Review card order", ""];
-  if (business) lines.push("Business name: " + business);
-  lines.push("Google Review link: " + (link || "(not provided - please look this up)"));
-  lines.push("");
-  lines.push("Delivery address: " + (address || "(not provided)"));
+  const params = new URLSearchParams();
+  params.set("type", "google");
+  if (business) params.set("biz", business);
+  if (link) params.set("link", link);
+  if (address) params.set("addr", address);
 
-  sendMail("New Rogue Tap Google Review card order" + (business ? " - " + business : ""), lines.join("\n"));
+  goToPreview(params);
 });
 
 // Tab 3: TripAdvisor Review card - business name and/or link, either is fine.
@@ -464,13 +457,13 @@ document.getElementById("tripadvisorForm").addEventListener("submit", function (
     return;
   }
 
-  const lines = ["New Rogue Tap TripAdvisor Review card order", ""];
-  if (business) lines.push("Business name: " + business);
-  lines.push("TripAdvisor Review link: " + (link || "(not provided - please look this up)"));
-  lines.push("");
-  lines.push("Delivery address: " + (address || "(not provided)"));
+  const params = new URLSearchParams();
+  params.set("type", "tripadvisor");
+  if (business) params.set("biz", business);
+  if (link) params.set("link", link);
+  if (address) params.set("addr", address);
 
-  sendMail("New Rogue Tap TripAdvisor Review card order" + (business ? " - " + business : ""), lines.join("\n"));
+  goToPreview(params);
 });
 </script>
 </body>

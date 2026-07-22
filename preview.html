@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rogue Tap - Preview your card</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://roguetap.com/preview.html">
+<style>
+  :root {
+    --lime: #d4f900;
+    --black: #111111;
+    --panel: #1a1a1a;
+    --text-dim: #b7b7b7;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--black);
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  .wrap {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 40px 24px 60px;
+    text-align: center;
+  }
+  .brand {
+    display: inline-block;
+    background: var(--lime);
+    color: var(--black);
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 2px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+  h1 {
+    font-size: 22px;
+    margin: 0 0 8px;
+  }
+  p.sub {
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0 0 26px;
+  }
+  .preview-card {
+    background: #1a1a1a;
+    border-radius: 18px;
+    padding: 28px 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    text-align: center;
+    margin-bottom: 22px;
+  }
+  h2.name { font-size: 22px; margin: 4px 0 2px; }
+  .title { color: #b7b7b7; font-size: 14px; margin: 0 0 2px; }
+  .company { color: var(--lime); font-weight: 600; font-size: 15px; margin: 0 0 18px; }
+  .field {
+    text-align: left;
+    font-size: 14px;
+    padding: 8px 0;
+    border-top: 1px solid #2a2a2a;
+    color: #e6e6e6;
+  }
+  .field span { color: #888; display: inline-block; width: 64px; }
+  .field.icon-field { display: flex; align-items: center; gap: 10px; }
+  .field.icon-field svg { flex: none; border-radius: 6px; }
+  .field.icon-field a { color: #e6e6e6; text-decoration: none; word-break: break-all; }
+  .socials { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
+  .socials a { display: inline-flex; line-height: 0; }
+  .socials a svg { border-radius: 9px; }
+  .empty { color: #999; font-size: 14px; line-height: 1.5; }
+  .addr-box {
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 18px 20px;
+    text-align: left;
+    margin-bottom: 22px;
+  }
+  .addr-box .addr-label {
+    color: #888;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .addr-box .addr-text {
+    font-size: 14px;
+    color: #e6e6e6;
+    white-space: pre-wrap;
+  }
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  button.btn-primary {
+    display: block;
+    width: 100%;
+    padding: 14px 0;
+    background: var(--lime);
+    color: var(--black);
+    font-weight: 700;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  a.btn-secondary {
+    display: block;
+    width: 100%;
+    padding: 14px 0;
+    background: transparent;
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    border: 1px solid #333;
+    border-radius: 10px;
+    text-decoration: none;
+  }
+  .footer {
+    margin-top: 26px;
+    color: #555;
+    font-size: 11px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Rogue Tap</div>
+  <h1>Here's what will be on your card</h1>
+  <p class="sub">Check everything looks right, then confirm to send your order through to us.</p>
+
+  <div class="preview-card" id="previewCard"><p class="empty">Loading preview...</p></div>
+
+  <div class="addr-box" id="addrBox" style="display:none;">
+    <div class="addr-label">Delivery address</div>
+    <div class="addr-text" id="addrText"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-primary" id="confirmBtn">Looks good - submit my order</button>
+    <a class="btn-secondary" id="backLink" href="order.html">&larr; Go back and edit</a>
+  </div>
+
+  <div class="footer">&copy; 2026 Rogue Tap. Smarter business connections.</div>
+</div>
+
+<script>
+function qp(name) {
+  const v = new URLSearchParams(window.location.search).get(name);
+  return v ? decodeURIComponent(v) : "";
+}
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+// Same icon badges used on the tap-to-contact page, kept inline so this
+// stays a single self-contained file.
+const ICONS = {
+  website: `<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="12" fill="#37474F"/><circle cx="12" cy="12" r="7" fill="none" stroke="#fff" stroke-width="1.3"/><line x1="5" y1="12" x2="19" y2="12" stroke="#fff" stroke-width="1.3"/><ellipse cx="12" cy="12" rx="3" ry="7" fill="none" stroke="#fff" stroke-width="1.3"/></svg>`,
+  facebook: `<svg viewBox="0 0 24 24" width="22" height="22"><rect width="24" height="24" rx="5" fill="#1877F2"/><text x="12" y="17.5" font-size="15" font-weight="700" fill="#fff" text-anchor="middle" font-family="Arial, sans-serif">f</text></svg>`,
+  instagram: `<svg viewBox="0 0 24 24" width="22" height="22"><rect width="24" height="24" rx="5" fill="#C13584"/><rect x="5" y="6" width="14" height="12" rx="3" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="12" r="3.4" fill="none" stroke="#fff" stroke-width="1.6"/><circle cx="16" cy="8" r="1" fill="#fff"/></svg>`,
+  linkedin: `<svg viewBox="0 0 24 24" width="22" height="22"><rect width="24" height="24" rx="5" fill="#0A66C2"/><text x="12" y="16.5" font-size="10.5" font-weight="700" fill="#fff" text-anchor="middle" font-family="Arial, sans-serif">in</text></svg>`,
+  google: `<svg viewBox="0 0 18 18" width="22" height="22"><path fill="#4285F4" d="M17.64 9.2045c0-.6381-.0573-1.2518-.1636-1.8409H9v3.4814h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2581h2.9087c1.7018-1.5668 2.6836-3.8741 2.6836-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.4673-.806 5.9564-2.1805l-2.9087-2.2581c-.8059.54-1.8368.8618-3.0477.8618-2.344 0-4.3282-1.5831-5.036-3.7104H.9573v2.3318C2.4382 15.9832 5.4818 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.2822-1.1168-.2822-1.71s.1022-1.17.2822-1.71V4.9582H.9573C.3477 6.1732 0 7.5477 0 9s.3477 2.8268.9573 4.0418L3.964 10.71z"/><path fill="#EA4335" d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.346l2.5813-2.5814C13.4632.8918 11.4259 0 9 0 5.4818 0 2.4382 2.0168.9573 4.9582L3.964 7.29C4.6718 5.1627 6.656 3.5795 9 3.5795z"/></svg>`,
+  tripadvisor: `<svg viewBox="0 0 40 40" width="22" height="22"><path d="M9 9 L20 15 L31 9" fill="none" stroke="#00AF87" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="23" r="17" fill="#00AF87"/><circle cx="12" cy="23" r="8" fill="#fff"/><circle cx="28" cy="23" r="8" fill="#fff"/><circle cx="12" cy="23" r="3.4" fill="#00AF87"/><circle cx="28" cy="23" r="3.4" fill="#00AF87"/></svg>`,
+};
+
+const type = qp("type") || "contact";
+const previewCard = document.getElementById("previewCard");
+const addrBox = document.getElementById("addrBox");
+const addrText = document.getElementById("addrText");
+const confirmBtn = document.getElementById("confirmBtn");
+const backLink = document.getElementById("backLink");
+
+let subject = "";
+let body = "";
+
+if (type === "google" || type === "tripadvisor") {
+  const business = qp("biz");
+  const link = qp("link");
+  const address = qp("addr");
+  const label = type === "google" ? "Google Review" : "TripAdvisor";
+
+  backLink.href = "order.html?tab=" + type;
+
+  let html = "";
+  html += `<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;">${ICONS[type]}<h2 class="name" style="margin:0;">${label} card</h2></div>`;
+  if (business) html += `<p class="company">${escapeHtml(business)}</p>`;
+  html += `<div class="field icon-field">${ICONS[type]}<a href="${escapeHtml(link || "#")}" target="_blank" rel="noopener">${escapeHtml(link || "(we'll look this up for you)")}</a></div>`;
+  previewCard.innerHTML = html;
+
+  if (address) {
+    addrBox.style.display = "block";
+    addrText.textContent = address;
+  }
+
+  const lines = ["New Rogue Tap " + label + " card order", ""];
+  if (business) lines.push("Business name: " + business);
+  lines.push(label + " link: " + (link || "(not provided - please look this up)"));
+  lines.push("");
+  lines.push("Delivery address: " + (address || "(not provided)"));
+  subject = "New Rogue Tap " + label + " card order" + (business ? " - " + business : "");
+  body = lines.join("\n");
+
+} else {
+  const name = qp("n");
+  const title = qp("t");
+  const company = qp("c");
+  const phone = qp("p");
+  const email = qp("e");
+  const website = qp("w");
+  const facebook = qp("f");
+  const instagram = qp("i");
+  const linkedin = qp("l");
+  const address = qp("addr");
+
+  backLink.href = "order.html";
+
+  if (!name && !title && !company && !phone && !email && !website && !facebook && !instagram && !linkedin) {
+    previewCard.innerHTML = '<p class="empty">No details were entered.</p>';
+  } else {
+    let html = "";
+    html += `<h2 class="name">${escapeHtml(name || "(no name given)")}</h2>`;
+    if (title) html += `<p class="title">${escapeHtml(title)}</p>`;
+    if (company) html += `<p class="company">${escapeHtml(company)}</p>`;
+    if (phone) html += `<div class="field"><span>Phone</span>${escapeHtml(phone)}</div>`;
+    if (email) html += `<div class="field"><span>Email</span>${escapeHtml(email)}</div>`;
+    if (website) html += `<div class="field icon-field">${ICONS.website}<a href="${escapeHtml(website)}" target="_blank" rel="noopener">${escapeHtml(website)}</a></div>`;
+
+    let socials = "";
+    if (facebook) socials += `<a href="${escapeHtml(facebook)}" target="_blank" rel="noopener" aria-label="Facebook">${ICONS.facebook}</a>`;
+    if (instagram) socials += `<a href="${escapeHtml(instagram)}" target="_blank" rel="noopener" aria-label="Instagram">${ICONS.instagram}</a>`;
+    if (linkedin) socials += `<a href="${escapeHtml(linkedin)}" target="_blank" rel="noopener" aria-label="LinkedIn">${ICONS.linkedin}</a>`;
+    if (socials) html += `<div class="socials">${socials}</div>`;
+
+    previewCard.innerHTML = html;
+  }
+
+  if (address) {
+    addrBox.style.display = "block";
+    addrText.textContent = address;
+  }
+
+  const lines = ["New Rogue Tap card order", ""];
+  if (name) lines.push("Name: " + name);
+  if (title) lines.push("Job title: " + title);
+  if (company) lines.push("Company: " + company);
+  if (phone) lines.push("Phone: " + phone);
+  if (email) lines.push("Email: " + email);
+  if (website) lines.push("Website: " + website);
+  if (facebook) lines.push("Facebook: " + facebook);
+  if (instagram) lines.push("Instagram: " + instagram);
+  if (linkedin) lines.push("LinkedIn: " + linkedin);
+  lines.push("");
+  lines.push("Delivery address: " + (address || "(not provided)"));
+  subject = "New Rogue Tap card order" + (name ? " - " + name : "");
+  body = lines.join("\n");
+}
+
+confirmBtn.addEventListener("click", function () {
+  // Open the pre-filled email so the order details reach us, then move on
+  // to the payment step.
+  window.location.href =
+    "mailto:roguetap@outlook.com?subject=" + encodeURIComponent(subject) +
+    "&body=" + encodeURIComponent(body);
+  setTimeout(function () {
+    window.location.href = "payment.html";
+  }, 600);
+});
+</script>
+</body>
+</html>
