@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rogue Tap - Add to Contacts</title>
+<meta name="robots" content="noindex">
 <style>
   :root {
     --lime: #d4f900;
@@ -165,10 +166,7 @@ const fields = {
 const content = document.getElementById("content");
 
 if (!fields.name) {
-  // No card data in the URL - this is someone visiting the domain
-  // directly (not tapping a card), so send them to the sales page
-  // instead of showing an empty contact card.
-  window.location.href = "home.html";
+  content.innerHTML = '<p class="empty">This is a Rogue Tap contact page.<br>Tap a Rogue Tap card against your phone to see a contact here.</p>';
 } else {
   let html = "";
   html += `<h1>${escapeHtml(fields.name)}</h1>`;
