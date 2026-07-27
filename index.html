@@ -131,8 +131,15 @@
 
 <script>
 function qp(name) {
+  // URLSearchParams.get() already fully decodes the value - it must NOT
+  // be passed through decodeURIComponent() again. Doing that turned out
+  // to be a real bug: for any field containing a stray "%" (a website
+  // URL, a social link, a company name with a percent sign in it), the
+  // extra decode pass either corrupted the value or threw a URIError
+  // that silently killed the rest of this script - which is exactly
+  // what broke the "Add to Contacts" button for real customer cards.
   const v = new URLSearchParams(window.location.search).get(name);
-  return v ? decodeURIComponent(v) : "";
+  return v || "";
 }
 
 function escapeHtml(s) {
@@ -194,52 +201,67 @@ if (!fields.name) {
   content.innerHTML = html;
 
   // Build the vCard text and wire up the Add to Contacts link.
-  // A data: URI with a text/vcard MIME type is what makes iOS Safari
-  // offer the native "Add Contact" screen when tapped.
-  const lines = ["BEGIN:VCARD", "VERSION:3.0"];
-  lines.push(`FN:${fields.name}`);
-  if (fields.company) lines.push(`ORG:${fields.company}`);
-  if (fields.title) lines.push(`TITLE:${fields.title}`);
-  if (fields.mobile) lines.push(`TEL;TYPE=CELL:${fields.mobile}`);
-  if (fields.phone) lines.push(`TEL;TYPE=CELL:${fields.phone}`);
-  if (fields.email) lines.push(`EMAIL:${fields.email}`);
-  if (fields.website) lines.push(`URL;TYPE=Website:${fields.website}`);
-  if (fields.roguetap) lines.push(`URL;TYPE=RogueTap:${fields.roguetap}`);
-  if (fields.facebook) lines.push(`URL;TYPE=Facebook:${fields.facebook}`);
-  if (fields.instagram) lines.push(`URL;TYPE=Instagram:${fields.instagram}`);
-  if (fields.linkedin) lines.push(`URL;TYPE=LinkedIn:${fields.linkedin}`);
-  lines.push("END:VCARD");
-  const vcard = lines.join("\r\n");
+  //
+  // This whole block is wrapped in try/catch on purpose: it previously
+  // wasn't, and a single malformed field elsewhere in this script once
+  // took the entire page down silently. Whatever happens with the vCard,
+  // the rest of the page (name, company, socials) must stay usable.
+  try {
+    const lines = ["BEGIN:VCARD", "VERSION:3.0"];
+    lines.push(`FN:${fields.name}`);
+    if (fields.company) lines.push(`ORG:${fields.company}`);
+    if (fields.title) lines.push(`TITLE:${fields.title}`);
+    if (fields.mobile) lines.push(`TEL;TYPE=CELL:${fields.mobile}`);
+    if (fields.phone) lines.push(`TEL;TYPE=CELL:${fields.phone}`);
+    if (fields.email) lines.push(`EMAIL:${fields.email}`);
+    if (fields.website) lines.push(`URL;TYPE=Website:${fields.website}`);
+    if (fields.roguetap) lines.push(`URL;TYPE=RogueTap:${fields.roguetap}`);
+    if (fields.facebook) lines.push(`URL;TYPE=Facebook:${fields.facebook}`);
+    if (fields.instagram) lines.push(`URL;TYPE=Instagram:${fields.instagram}`);
+    if (fields.linkedin) lines.push(`URL;TYPE=LinkedIn:${fields.linkedin}`);
+    lines.push("END:VCARD");
+    const vcard = lines.join("\r\n");
 
-  const dataUri = "data:text/vcard;charset=utf-8," + encodeURIComponent(vcard);
-  const safeFileName = fields.name.replace(/[^a-z0-9]+/gi, "_") || "contact";
-  const addBtn = document.getElementById("addBtn");
-  addBtn.setAttribute("href", dataUri);
+    // A Blob URL, not a data: URI. Real iOS Safari has been reported to
+    // silently do nothing when a user taps an <a href="data:..."> link -
+    // no error, no navigation, the button just looks dead, which matches
+    // exactly what was reported. A Blob URL is the standard, reliable
+    // cross-browser way to hand the browser a file to act on instead.
+    const vcardBlob = new Blob([vcard], { type: "text/vcard;charset=utf-8" });
+    const blobUrl = URL.createObjectURL(vcardBlob);
+    const safeFileName = fields.name.replace(/[^a-z0-9]+/gi, "_") || "contact";
+    const addBtn = document.getElementById("addBtn");
+    addBtn.setAttribute("href", blobUrl);
 
-  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  // The "download" attribute is what makes Android's browser save the
-  // vCard and offer to add it to Contacts - but on iOS, Safari doesn't
-  // support that attribute the same way: instead of opening its native
-  // "Create New Contact" screen, it just saves the raw .vcf file into
-  // the Files app and stops there, which looks like tapping the button
-  // did nothing. Leaving the attribute off entirely on iOS is what lets
-  // Safari open the vCard in its own contact-preview sheet instead.
-  if (!isIOS) {
-    addBtn.setAttribute("download", safeFileName + ".vcf");
-  }
+    // The "download" attribute is what makes Android's browser save the
+    // vCard and offer to add it to Contacts - but on iOS, Safari doesn't
+    // support that attribute the same way: instead of opening its native
+    // "Create New Contact" screen, it just saves the raw .vcf file into
+    // the Files app and stops there, which looks like tapping the button
+    // did nothing. Leaving the attribute off entirely on iOS is what lets
+    // Safari open the vCard in its own contact-preview sheet instead.
+    if (!isIOS) {
+      addBtn.setAttribute("download", safeFileName + ".vcf");
+    }
 
-  // Android: auto-trigger the contact download the instant the page
-  // opens, so tapping the card is the only tap needed - no button press.
-  // iPhone deliberately keeps the manual button below instead of this -
-  // Safari generally blocks a file download that isn't the direct result
-  // of a user's own tap on a link, so an auto-trigger there would
-  // silently fail rather than save a tap. This mirrors how both OSes
-  // already only honour the tag's first record: same idea, applied to
-  // this one extra step instead of a second NFC record.
-  const isAndroid = /Android/i.test(navigator.userAgent);
-  if (isAndroid) {
-    setTimeout(() => addBtn.click(), 60);
+    // Android: auto-trigger the contact download the instant the page
+    // opens, so tapping the card is the only tap needed - no button press.
+    // iPhone deliberately keeps the manual button below instead of this -
+    // Safari generally blocks a file download that isn't the direct result
+    // of a user's own tap on a link, so an auto-trigger there would
+    // silently fail rather than save a tap. This mirrors how both OSes
+    // already only honour the tag's first record: same idea, applied to
+    // this one extra step instead of a second NFC record.
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    if (isAndroid) {
+      setTimeout(() => addBtn.click(), 60);
+    }
+  } catch (err) {
+    // Don't let a vCard-building failure take the rest of the page with
+    // it - the name/company/socials above still render fine either way.
+    console.error("Rogue Tap: failed to build Add to Contacts vCard", err);
   }
 }
 </script>
