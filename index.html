@@ -184,8 +184,13 @@ if (!fields.name) {
   if (fields.title) html += `<p class="title">${escapeHtml(fields.title)}</p>`;
   if (fields.company) html += `<p class="company">${escapeHtml(fields.company)}</p>`;
 
-  if (fields.mobile) html += `<div class="field"><span>Mobile</span>${escapeHtml(fields.mobile)}</div>`;
-  if (fields.phone) html += `<div class="field"><span>Phone</span>${escapeHtml(fields.phone)}</div>`;
+  // Show a single phone line instead of separate Mobile/Phone rows - a
+  // card only ever has one number that matters to whoever's reading it.
+  // "mobile" is the current field; "phone" is the older legacy param,
+  // kept only so cards written before the mobile/phone split still show
+  // their number. If somehow both are present, mobile wins.
+  const phoneNumber = fields.mobile || fields.phone;
+  if (phoneNumber) html += `<div class="field"><span>Phone</span>${escapeHtml(phoneNumber)}</div>`;
   if (fields.email) html += `<div class="field"><span>Email</span>${escapeHtml(fields.email)}</div>`;
   if (fields.website) html += `<div class="field icon-field">${ICONS.website}<a href="${escapeHtml(fields.website)}" target="_blank" rel="noopener">${escapeHtml(fields.website)}</a></div>`;
 
@@ -211,8 +216,7 @@ if (!fields.name) {
     lines.push(`FN:${fields.name}`);
     if (fields.company) lines.push(`ORG:${fields.company}`);
     if (fields.title) lines.push(`TITLE:${fields.title}`);
-    if (fields.mobile) lines.push(`TEL;TYPE=CELL:${fields.mobile}`);
-    if (fields.phone) lines.push(`TEL;TYPE=CELL:${fields.phone}`);
+    if (phoneNumber) lines.push(`TEL;TYPE=CELL:${phoneNumber}`);
     if (fields.email) lines.push(`EMAIL:${fields.email}`);
     if (fields.website) lines.push(`URL;TYPE=Website:${fields.website}`);
     if (fields.roguetap) lines.push(`URL;TYPE=RogueTap:${fields.roguetap}`);
