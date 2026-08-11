@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rogue Tap - Payment confirmed</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://roguetap.com/thank-you.html">
+<style>
+  :root {
+    --lime: #d4f900;
+    --black: #111111;
+    --panel: #1a1a1a;
+    --text-dim: #b7b7b7;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--black);
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    min-height: 100vh;
+  }
+  .wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 60px 24px;
+    text-align: center;
+  }
+  .brand {
+    display: inline-block;
+    background: var(--lime);
+    color: var(--black);
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 2px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+  }
+  .icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--lime);
+    color: var(--black);
+    font-size: 28px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+  }
+  h1 {
+    font-size: 22px;
+    margin: 0 0 12px;
+  }
+  p {
+    color: var(--text-dim);
+    font-size: 14.5px;
+    line-height: 1.7;
+    margin: 0 0 10px;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid #2a2a2a;
+    border-radius: 14px;
+    padding: 20px;
+    margin-top: 24px;
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: left;
+  }
+  a { color: var(--lime); }
+  .footer {
+    text-align: center;
+    color: #555;
+    font-size: 11px;
+    margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">Rogue Tap</div>
+  <div class="icon">&#10003;</div>
+  <h1 id="mainMsg">Payment confirmed - thank you!</h1>
+  <p id="subMsg">We've received your order and payment. We'll get your card into production and be in touch if we need anything else.</p>
+  <div class="panel" id="fallbackPanel" style="display:none;">
+    We couldn't automatically match this payment to your order details on this
+    device. Don't worry - your payment has still gone through successfully.
+    Just to be safe, please email <a href="mailto:roguetap@outlook.com">roguetap@outlook.com</a>
+    with your order details so we can get your card made.
+  </div>
+  <div class="footer">&copy; 2026 Rogue Tap. Smarter business connections.</div>
+</div>
+
+<script>
+(async function () {
+  const params = new URLSearchParams(window.location.search);
+  const product = params.get("product") || "";
+  const session = params.get("session") || "";
+
+  const raw = localStorage.getItem("rt_pending_order");
+  const fallbackPanel = document.getElementById("fallbackPanel");
+
+  if (!raw) {
+    fallbackPanel.style.display = "block";
+    return;
+  }
+
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch (e) {
+    fallbackPanel.style.display = "block";
+    return;
+  }
+
+  const productNames = {
+    card1: "1 Business Card",
+    card2: "2 Business Cards",
+    google: "Google Review Card",
+    tripadvisor: "TripAdvisor Review Card"
+  };
+
+  const payload = Object.assign({}, data, {
+    "Product": productNames[data.product] || data.product || product,
+    "Stripe session": session,
+    "_subject": "PAYMENT CONFIRMED - New Rogue Tap order (" + (productNames[data.product] || data.product || product) + ")",
+    "_template": "table",
+    "_captcha": "false"
+  });
+
+  try {
+    const res = await fetch("https://formsubmit.co/ajax/roguetap@outlook.com", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      keepalive: true
+    });
+    if (res.ok) {
+      localStorage.removeItem("rt_pending_order");
+    } else {
+      fallbackPanel.style.display = "block";
+    }
+  } catch (e) {
+    fallbackPanel.style.display = "block";
+  }
+})();
+</script>
+</body>
+</html>
