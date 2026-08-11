@@ -163,6 +163,22 @@
     margin-top: 10px;
     display: none;
   }
+  input[type="file"] {
+    width: 100%;
+    background: #0f0f0f;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text-dim);
+    font-size: 13.5px;
+    font-family: inherit;
+  }
+  .artwork-status {
+    font-size: 12.5px;
+    margin-top: 8px;
+    min-height: 16px;
+    color: var(--text-dim);
+  }
   .hidden { display: none; }
   .footer {
     text-align: center;
@@ -217,6 +233,19 @@
 
       <label id="c-notesLabel" class="hidden">Notes for your order <span class="opt">(optional)</span></label>
       <textarea id="c-notes" class="hidden" placeholder="e.g. different details for your second card, or anything else we should know"></textarea>
+
+      <div class="section-label">Your card artwork</div>
+
+      <label>Upload your design <span class="opt">(the image to print on the card)</span></label>
+      <input type="file" id="c-artwork" accept="image/png,image/jpeg,image/webp">
+      <div class="howto">
+        Upload the image you want printed on the front of the card. We'll automatically
+        resize and convert it to a print-ready file at 8.5cm x 5.4cm (300 DPI) before
+        it's sent to production. JPG, PNG or WEBP - the sharper and higher-resolution the
+        original, the better it'll look printed. If your image isn't the same shape as
+        the card, we'll crop it centered to fit.
+      </div>
+      <div class="artwork-status" id="c-artwork-status"></div>
 
       <div class="section-label">Shipping address</div>
 
@@ -287,6 +316,19 @@
         we'll help you track down the correct direct link before your card is made.
       </div>
 
+      <div class="section-label">Your card artwork</div>
+
+      <label>Upload your design <span class="opt">(the image to print on the card)</span></label>
+      <input type="file" id="r-artwork" accept="image/png,image/jpeg,image/webp">
+      <div class="howto">
+        Upload the image you want printed on the front of the card. We'll automatically
+        resize and convert it to a print-ready file at 8.5cm x 5.4cm (300 DPI) before
+        it's sent to production. JPG, PNG or WEBP - the sharper and higher-resolution the
+        original, the better it'll look printed. If your image isn't the same shape as
+        the card, we'll crop it centered to fit.
+      </div>
+      <div class="artwork-status" id="r-artwork-status"></div>
+
       <div class="section-label">Shipping address</div>
 
       <label class="tight">Address line 1</label>
@@ -319,6 +361,8 @@
   <div class="footer">&copy; 2026 Rogue Tap. Smarter business connections.</div>
 </div>
 
+<canvas id="artwork-canvas" style="display:none;"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.js"></script>
 <script>
 const STRIPE_LINKS = {
   card1: "https://buy.stripe.com/4gM9AS3Gy3Dp9N2dN56g804",
@@ -341,6 +385,102 @@ function savePendingOrder(data) {
   localStorage.setItem("rt_pending_order", JSON.stringify(data));
 }
 
+// --- Artwork upload: resize/crop to card size and convert to print-ready TIFF ---
+const ARTWORK_DPI = 300;
+const ARTWORK_CM_W = 8.5;
+const ARTWORK_CM_H = 5.4;
+const ARTWORK_PX_W = Math.round(ARTWORK_CM_W / 2.54 * ARTWORK_DPI); // 1004px
+const ARTWORK_PX_H = Math.round(ARTWORK_CM_H / 2.54 * ARTWORK_DPI); // 638px
+
+function processArtwork(file) {
+  return new Promise(function (resolve, reject) {
+    if (!file) { reject(new Error("No file selected")); return; }
+    if (!/^image\//.test(file.type)) { reject(new Error("Please upload an image file")); return; }
+
+    const reader = new FileReader();
+    reader.onerror = function () { reject(new Error("Couldn't read that file")); };
+    reader.onload = function (e) {
+      const img = new Image();
+      img.onerror = function () { reject(new Error("Couldn't open that image")); };
+      img.onload = function () {
+        try {
+          const canvas = document.getElementById("artwork-canvas");
+          canvas.width = ARTWORK_PX_W;
+          canvas.height = ARTWORK_PX_H;
+          const ctx = canvas.getContext("2d");
+
+          // Cover-fit crop, centered, so the image fills the card without distortion
+          const targetRatio = ARTWORK_PX_W / ARTWORK_PX_H;
+          const srcRatio = img.width / img.height;
+          let sx, sy, sw, sh;
+          if (srcRatio > targetRatio) {
+            sh = img.height;
+            sw = sh * targetRatio;
+            sx = (img.width - sw) / 2;
+            sy = 0;
+          } else {
+            sw = img.width;
+            sh = sw / targetRatio;
+            sx = 0;
+            sy = (img.height - sh) / 2;
+          }
+          ctx.clearRect(0, 0, ARTWORK_PX_W, ARTWORK_PX_H);
+          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, ARTWORK_PX_W, ARTWORK_PX_H);
+
+          const imageData = ctx.getImageData(0, 0, ARTWORK_PX_W, ARTWORK_PX_H);
+          const tiffBuffer = UTIF.encodeImage(imageData.data, ARTWORK_PX_W, ARTWORK_PX_H);
+          const blob = new Blob([tiffBuffer], { type: "image/tiff" });
+          const sizeKB = Math.round(blob.size / 1024);
+
+          const blobReader = new FileReader();
+          blobReader.onerror = function () { reject(new Error("Couldn't finish processing that image")); };
+          blobReader.onload = function (be) {
+            resolve({ dataUrl: be.target.result, sizeKB: sizeKB });
+          };
+          blobReader.readAsDataURL(blob);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function wireArtworkInput(inputId, statusId) {
+  let artworkData = null;
+  const input = document.getElementById(inputId);
+  const statusEl = document.getElementById(statusId);
+
+  input.addEventListener("change", function () {
+    const file = input.files && input.files[0];
+    artworkData = null;
+    if (!file) {
+      statusEl.textContent = "";
+      return;
+    }
+    statusEl.textContent = "Processing image...";
+    statusEl.style.color = "var(--text-dim)";
+    processArtwork(file).then(function (result) {
+      artworkData = result;
+      statusEl.textContent = "Ready - converted to a " + ARTWORK_PX_W + "x" + ARTWORK_PX_H + "px print file (" + result.sizeKB + " KB).";
+      statusEl.style.color = "var(--lime)";
+    }).catch(function (err) {
+      statusEl.textContent = (err && err.message ? err.message : "Couldn't process that image") + " - try a different file.";
+      statusEl.style.color = "#ff6b6b";
+    });
+  });
+
+  return {
+    get: function () { return artworkData; },
+    isProcessing: function () { return input.files && input.files[0] && !artworkData && statusEl.textContent.indexOf("Processing") === 0; }
+  };
+}
+
+const cArtwork = wireArtworkInput("c-artwork", "c-artwork-status");
+const rArtwork = wireArtworkInput("r-artwork", "r-artwork-status");
+
 if (product === "card1" || product === "card2") {
   cardForm.classList.remove("hidden");
   if (product === "card2") {
@@ -354,13 +494,25 @@ if (product === "card1" || product === "card2") {
 
   cardForm.addEventListener("submit", function (e) {
     e.preventDefault();
+    const errEl = document.getElementById("c-err");
     const required = ["c-fullname", "c-company", "c-mobile", "c-email", "c-addr1", "c-city", "c-postcode", "c-country"];
     const missing = required.some(id => !document.getElementById(id).value.trim());
     if (missing) {
-      document.getElementById("c-err").style.display = "block";
+      errEl.textContent = "Please fill in all required fields.";
+      errEl.style.display = "block";
       return;
     }
-    document.getElementById("c-err").style.display = "none";
+    if (cArtwork.isProcessing()) {
+      errEl.textContent = "Still processing your uploaded image - give it a second and try again.";
+      errEl.style.display = "block";
+      return;
+    }
+    if (!cArtwork.get()) {
+      errEl.textContent = "Please upload an image for your card artwork.";
+      errEl.style.display = "block";
+      return;
+    }
+    errEl.style.display = "none";
     const btn = document.getElementById("c-submit");
     btn.disabled = true;
     btn.textContent = "Taking you to payment...";
@@ -383,6 +535,9 @@ if (product === "card1" || product === "card2") {
       "Country": document.getElementById("c-country").value.trim()
     });
 
+    const cArtworkResult = cArtwork.get();
+    localStorage.setItem("rt_pending_artwork", JSON.stringify({ dataUrl: cArtworkResult.dataUrl, sizeKB: cArtworkResult.sizeKB }));
+
     window.location.href = STRIPE_LINKS[product];
   });
 
@@ -397,13 +552,25 @@ if (product === "card1" || product === "card2") {
 
   reviewForm.addEventListener("submit", function (e) {
     e.preventDefault();
+    const errEl = document.getElementById("r-err");
     const required = ["r-business", "r-link", "r-addr1", "r-city", "r-postcode", "r-country"];
     const missing = required.some(id => !document.getElementById(id).value.trim());
     if (missing) {
-      document.getElementById("r-err").style.display = "block";
+      errEl.textContent = "Please fill in all required fields.";
+      errEl.style.display = "block";
       return;
     }
-    document.getElementById("r-err").style.display = "none";
+    if (rArtwork.isProcessing()) {
+      errEl.textContent = "Still processing your uploaded image - give it a second and try again.";
+      errEl.style.display = "block";
+      return;
+    }
+    if (!rArtwork.get()) {
+      errEl.textContent = "Please upload an image for your card artwork.";
+      errEl.style.display = "block";
+      return;
+    }
+    errEl.style.display = "none";
     const btn = document.getElementById("r-submit");
     btn.disabled = true;
     btn.textContent = "Taking you to payment...";
@@ -420,6 +587,9 @@ if (product === "card1" || product === "card2") {
       "Postcode": document.getElementById("r-postcode").value.trim(),
       "Country": document.getElementById("r-country").value.trim()
     });
+
+    const rArtworkResult = rArtwork.get();
+    localStorage.setItem("rt_pending_artwork", JSON.stringify({ dataUrl: rArtworkResult.dataUrl, sizeKB: rArtworkResult.sizeKB }));
 
     window.location.href = STRIPE_LINKS[product];
   });
