@@ -149,7 +149,92 @@
   } catch (e) {
     fallbackPanel.style.display = "block";
   }
+
+  sendArtworkToPrinter(data, data.product || product, session, productNames[data.product] || data.product || product);
 })();
+
+// --- Send the print-ready TIFF (saved by order-details.html) to the printer ---
+// NOTE: printer email as provided - please double-check the exact spelling below
+// with whoever set up the printer's inbox, and make sure that inbox has clicked
+// the one-time FormSubmit confirmation link, or these emails will silently fail.
+const PRINTER_EMAIL = "aritsjetpriner@opusuk.co.uk";
+
+function dataURLtoFile(dataUrl, filename) {
+  const parts = dataUrl.split(",");
+  const mimeMatch = parts[0].match(/:(.*?);/);
+  const mime = mimeMatch ? mimeMatch[1] : "image/tiff";
+  const binary = atob(parts[1]);
+  const arr = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) arr[i] = binary.charCodeAt(i);
+  return new File([arr], filename, { type: mime });
+}
+
+function sendArtworkToPrinter(orderData, product, session, productLabel) {
+  if (!PRINTER_EMAIL) return;
+  const rawArtwork = localStorage.getItem("rt_pending_artwork");
+  if (!rawArtwork) return;
+
+  let artwork;
+  try {
+    artwork = JSON.parse(rawArtwork);
+  } catch (e) {
+    return;
+  }
+  if (!artwork || !artwork.dataUrl) return;
+
+  let file;
+  try {
+    file = dataURLtoFile(artwork.dataUrl, "roguetap-" + (product || "order") + "-" + Date.now() + ".tif");
+  } catch (e) {
+    return;
+  }
+
+  const frameName = "rt-artwork-frame-" + Date.now();
+  const iframe = document.createElement("iframe");
+  iframe.name = frameName;
+  iframe.style.display = "none";
+  document.body.appendChild(iframe);
+
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = "https://formsubmit.co/" + PRINTER_EMAIL;
+  form.enctype = "multipart/form-data";
+  form.target = frameName;
+  form.style.display = "none";
+
+  function addField(name, value) {
+    const inp = document.createElement("input");
+    inp.type = "hidden";
+    inp.name = name;
+    inp.value = value == null ? "" : value;
+    form.appendChild(inp);
+  }
+
+  addField("_subject", "PRINT FILE - " + productLabel + " (session " + session + ")");
+  addField("_cc", "roguetap@outlook.com");
+  addField("_captcha", "false");
+  addField("_template", "table");
+  addField("Product", productLabel);
+  addField("Stripe session", session);
+  addField("Customer / business name", orderData["Business name"] || orderData["Full name"] || orderData["Company"] || "");
+
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.name = "attachment";
+  const dt = new DataTransfer();
+  dt.items.add(file);
+  fileInput.files = dt.files;
+  form.appendChild(fileInput);
+
+  document.body.appendChild(form);
+  form.submit();
+
+  setTimeout(function () {
+    localStorage.removeItem("rt_pending_artwork");
+    form.remove();
+    iframe.remove();
+  }, 5000);
+}
 </script>
 </body>
 </html>
