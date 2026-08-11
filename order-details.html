@@ -261,9 +261,30 @@
       <label>Your review link</label>
       <input type="url" id="r-link" placeholder="https://" required>
       <div class="howto">
-        <b>Where to find this:</b> for Google, open your Google Business Profile &rarr;
-        "Ask for reviews" &rarr; copy the link. For TripAdvisor, go to your listing page
-        on tripadvisor.com and copy the page URL from your browser's address bar.
+        <b>Important - use the direct "leave a review" link, not your general listing
+        link.</b> This is what makes the card work properly: customers tap it and land
+        straight on the star rating screen, instead of your Maps listing or business page.
+        <br><br>
+        <b>Google:</b> sign in to your
+        <a href="https://business.google.com" target="_blank" rel="noopener">Google
+        Business Profile</a> as the owner, then look for <b>"Ask for reviews"</b> (also
+        shown as "Get more reviews"). It gives you a short link starting with
+        <b>g.page/r/...</b> (or a custom <b>g.page/YourBusinessName/review</b> if you've
+        set a short name). Test it on your phone first - it should open straight onto the
+        star rating box, not Google Maps.
+        <br><br>
+        <b>TripAdvisor:</b> open your business listing page on tripadvisor.com, find the
+        <b>"Write a Review"</b> button, and copy that link (right-click it &rarr; "Copy
+        link address" on desktop, or tap it and copy the resulting page URL). It'll look
+        something like <b>tripadvisor.com/UserReviewEdit-g123456-d123456-YourBusiness...</b>
+        - the "g" and "d" numbers are your listing's location and property IDs. Don't just
+        copy your listing page URL, as that lands on your reviews list rather than the
+        write-a-review screen.
+        <br><br>
+        Can't find it, or not sure it's the right one? Paste your best guess (even your
+        normal listing link) for now, then email us at
+        <a href="mailto:roguetap@outlook.com">roguetap@outlook.com</a> after ordering and
+        we'll help you track down the correct direct link before your card is made.
       </div>
 
       <div class="section-label">Shipping address</div>
@@ -397,7 +418,7 @@ if (product === "card1" || product === "card2") {
       "Address line 2": document.getElementById("r-addr2").value.trim(),
       "Town / City": document.getElementById("r-city").value.trim(),
       "Postcode": document.getElementById("r-postcode").value.trim(),
-      "Country": document.getElementById("r-country").value.trim()
+      "Country": document.getElementById("r-country").value.trim*
     });
 
     window.location.href = STRIPE_LINKS[product];
