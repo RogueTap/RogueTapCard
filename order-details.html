@@ -262,9 +262,10 @@
         resize and convert it to a print-ready file at 8.5cm x 5.4cm (300 DPI) before
         it's sent to production. JPG, PNG or WEBP - the sharper and higher-resolution the
         original, the better it'll look printed. If your image is the wrong way round
-        (e.g. a portrait photo for this landscape card), we'll rotate it 90° first so
-        nothing gets sliced off - then crop it centered to fit if it's still not an
-        exact match for the card shape.
+        (e.g. a portrait photo for this landscape card), we'll rotate it 90° first,
+        then fit the whole thing inside the card - nothing ever gets cropped or
+        sliced off. If it's not an exact match for the card's shape, we add a thin
+        border in a colour picked from your image so it blends in.
       </div>
       <div class="artwork-status" id="c-artwork-status"></div>
       <img class="artwork-preview" id="c-artwork-preview" style="display:none;">
@@ -348,9 +349,10 @@
         resize and convert it to a print-ready file at 8.5cm x 5.4cm (300 DPI) before
         it's sent to production. JPG, PNG or WEBP - the sharper and higher-resolution the
         original, the better it'll look printed. If your image is the wrong way round
-        (e.g. a portrait photo for this landscape card), we'll rotate it 90° first so
-        nothing gets sliced off - then crop it centered to fit if it's still not an
-        exact match for the card shape.
+        (e.g. a portrait photo for this landscape card), we'll rotate it 90° first,
+        then fit the whole thing inside the card - nothing ever gets cropped or
+        sliced off. If it's not an exact match for the card's shape, we add a thin
+        border in a colour picked from your image so it blends in.
       </div>
       <div class="artwork-status" id="r-artwork-status"></div>
       <img class="artwork-preview" id="r-artwork-preview" style="display:none;">
@@ -460,24 +462,29 @@ function processArtwork(file) {
             rotated = true;
           }
 
-          // Cover-fit crop, centered, so the (now correctly-oriented) image fills
-          // the card without distortion
-          const targetRatio = ARTWORK_PX_W / ARTWORK_PX_H;
-          const srcRatio = srcW / srcH;
-          let sx, sy, sw, sh;
-          if (srcRatio > targetRatio) {
-            sh = srcH;
-            sw = sh * targetRatio;
-            sx = (srcW - sw) / 2;
-            sy = 0;
-          } else {
-            sw = srcW;
-            sh = sw / targetRatio;
-            sx = 0;
-            sy = (srcH - sh) / 2;
-          }
+          // Contain-fit, centered: scale the (now correctly-oriented) image down so
+          // the WHOLE thing fits inside the card with nothing sliced off - designs
+          // often have text or logos right up to the edge, so we never crop into
+          // the image. If it isn't an exact match for the card's proportions, we
+          // pad the leftover strip with a colour sampled from the image itself so
+          // the border blends in rather than showing as a hard black/white bar.
+          const sampleCanvas = document.createElement("canvas");
+          sampleCanvas.width = 1;
+          sampleCanvas.height = 1;
+          const sctx = sampleCanvas.getContext("2d");
+          sctx.drawImage(srcEl, 0, 0, 1, 1);
+          const fillColor = sctx.getImageData(0, 0, 1, 1).data;
+
+          const scale = Math.min(ARTWORK_PX_W / srcW, ARTWORK_PX_H / srcH);
+          const dw = srcW * scale;
+          const dh = srcH * scale;
+          const dx = (ARTWORK_PX_W - dw) / 2;
+          const dy = (ARTWORK_PX_H - dh) / 2;
+
           ctx.clearRect(0, 0, ARTWORK_PX_W, ARTWORK_PX_H);
-          ctx.drawImage(srcEl, sx, sy, sw, sh, 0, 0, ARTWORK_PX_W, ARTWORK_PX_H);
+          ctx.fillStyle = "rgb(" + fillColor[0] + "," + fillColor[1] + "," + fillColor[2] + ")";
+          ctx.fillRect(0, 0, ARTWORK_PX_W, ARTWORK_PX_H);
+          ctx.drawImage(srcEl, 0, 0, srcW, srcH, dx, dy, dw, dh);
 
           const previewDataUrl = canvas.toDataURL("image/png");
 
