@@ -261,8 +261,10 @@
         Upload the image you want printed on the front of the card. We'll automatically
         resize and convert it to a print-ready file at 8.5cm x 5.4cm (300 DPI) before
         it's sent to production. JPG, PNG or WEBP - the sharper and higher-resolution the
-        original, the better it'll look printed. If your image isn't the same shape as
-        the card, we'll crop it centered to fit.
+        original, the better it'll look printed. If your image is the wrong way round
+        (e.g. a portrait photo for this landscape card), we'll rotate it 90° first so
+        nothing gets sliced off - then crop it centered to fit if it's still not an
+        exact match for the card shape.
       </div>
       <div class="artwork-status" id="c-artwork-status"></div>
       <img class="artwork-preview" id="c-artwork-preview" style="display:none;">
@@ -345,8 +347,10 @@
         Upload the image you want printed on the front of the card. We'll automatically
         resize and convert it to a print-ready file at 8.5cm x 5.4cm (300 DPI) before
         it's sent to production. JPG, PNG or WEBP - the sharper and higher-resolution the
-        original, the better it'll look printed. If your image isn't the same shape as
-        the card, we'll crop it centered to fit.
+        original, the better it'll look printed. If your image is the wrong way round
+        (e.g. a portrait photo for this landscape card), we'll rotate it 90° first so
+        nothing gets sliced off - then crop it centered to fit if it's still not an
+        exact match for the card shape.
       </div>
       <div class="artwork-status" id="r-artwork-status"></div>
       <img class="artwork-preview" id="r-artwork-preview" style="display:none;">
@@ -432,23 +436,48 @@ function processArtwork(file) {
           canvas.height = ARTWORK_PX_H;
           const ctx = canvas.getContext("2d");
 
-          // Cover-fit crop, centered, so the image fills the card without distortion
+          // If the uploaded photo's orientation doesn't match the card's orientation
+          // (e.g. a portrait photo going on a landscape card), rotate it 90 degrees
+          // first so we're sizing down the whole image properly, not chopping a
+          // portrait photo into a thin landscape strip.
+          const targetIsLandscape = ARTWORK_PX_W > ARTWORK_PX_H;
+          const srcIsLandscape = img.width > img.height;
+          let srcEl = img;
+          let srcW = img.width;
+          let srcH = img.height;
+          let rotated = false;
+          if (targetIsLandscape !== srcIsLandscape) {
+            const rotCanvas = document.createElement("canvas");
+            rotCanvas.width = img.height;
+            rotCanvas.height = img.width;
+            const rctx = rotCanvas.getContext("2d");
+            rctx.translate(rotCanvas.width / 2, rotCanvas.height / 2);
+            rctx.rotate(Math.PI / 2);
+            rctx.drawImage(img, -img.width / 2, -img.height / 2);
+            srcEl = rotCanvas;
+            srcW = rotCanvas.width;
+            srcH = rotCanvas.height;
+            rotated = true;
+          }
+
+          // Cover-fit crop, centered, so the (now correctly-oriented) image fills
+          // the card without distortion
           const targetRatio = ARTWORK_PX_W / ARTWORK_PX_H;
-          const srcRatio = img.width / img.height;
+          const srcRatio = srcW / srcH;
           let sx, sy, sw, sh;
           if (srcRatio > targetRatio) {
-            sh = img.height;
+            sh = srcH;
             sw = sh * targetRatio;
-            sx = (img.width - sw) / 2;
+            sx = (srcW - sw) / 2;
             sy = 0;
           } else {
-            sw = img.width;
+            sw = srcW;
             sh = sw / targetRatio;
             sx = 0;
-            sy = (img.height - sh) / 2;
+            sy = (srcH - sh) / 2;
           }
           ctx.clearRect(0, 0, ARTWORK_PX_W, ARTWORK_PX_H);
-          ctx.drawImage(img, sx, sy, sw, sh, 0, 0, ARTWORK_PX_W, ARTWORK_PX_H);
+          ctx.drawImage(srcEl, sx, sy, sw, sh, 0, 0, ARTWORK_PX_W, ARTWORK_PX_H);
 
           const previewDataUrl = canvas.toDataURL("image/png");
 
@@ -460,7 +489,7 @@ function processArtwork(file) {
           const blobReader = new FileReader();
           blobReader.onerror = function () { reject(new Error("Couldn't finish processing that image")); };
           blobReader.onload = function (be) {
-            resolve({ dataUrl: be.target.result, sizeKB: sizeKB, previewDataUrl: previewDataUrl, tiffBlob: blob });
+            resolve({ dataUrl: be.target.result, sizeKB: sizeKB, previewDataUrl: previewDataUrl, tiffBlob: blob, rotated: rotated });
           };
           blobReader.readAsDataURL(blob);
         } catch (err) {
@@ -502,7 +531,7 @@ function wireArtworkInput(inputId, statusId) {
     statusEl.style.color = "var(--text-dim)";
     processArtwork(file).then(function (result) {
       artworkData = result;
-      statusEl.textContent = "Ready - converted to a " + ARTWORK_PX_W + "x" + ARTWORK_PX_H + "px print file (" + result.sizeKB + " KB). This is exactly what would be sent to print - have a look below before ordering.";
+      statusEl.textContent = "Ready - converted to a " + ARTWORK_PX_W + "x" + ARTWORK_PX_H + "px print file (" + result.sizeKB + " KB)" + (result.rotated ? ", rotated 90° so the whole photo fits the card properly" : "") + ". This is exactly what would be sent to print - have a look below before ordering.";
       statusEl.style.color = "var(--lime)";
       if (previewEl && result.previewDataUrl) {
         previewEl.src = result.previewDataUrl;
