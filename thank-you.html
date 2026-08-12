@@ -154,10 +154,13 @@
 })();
 
 // --- Send the print-ready TIFF (saved by order-details.html) to the printer ---
-// NOTE: printer email as provided - please double-check the exact spelling below
-// with whoever set up the printer's inbox, and make sure that inbox has clicked
-// the one-time FormSubmit confirmation link, or these emails will silently fail.
-const PRINTER_EMAIL = "aritsjetpriner@opusuk.co.uk";
+// PRINTER_EMAIL receives the artwork attachment directly. ARTWORK_CC_EMAILS get
+// copied on the same email (with the same attachment) as delivery confirmation -
+// currently Rogue Tap's own inbox and Roger at Opus UK (printer contact).
+// NOTE: PRINTER_EMAIL still needs to click FormSubmit's one-time confirmation
+// link (sent to that inbox on first submission) before deliveries will go through.
+const PRINTER_EMAIL = "aritsjet.printer@opusuk.co.uk";
+const ARTWORK_CC_EMAILS = "roguetap@outlook.com,roger@opusuk.co.uk";
 
 function dataURLtoFile(dataUrl, filename) {
   const parts = dataUrl.split(",");
@@ -211,7 +214,7 @@ function sendArtworkToPrinter(orderData, product, session, productLabel) {
   }
 
   addField("_subject", "PRINT FILE - " + productLabel + " (session " + session + ")");
-  addField("_cc", "roguetap@outlook.com");
+  addField("_cc", ARTWORK_CC_EMAILS);
   addField("_captcha", "false");
   addField("_template", "table");
   addField("Product", productLabel);
