@@ -257,15 +257,25 @@
 
       <label>Upload your design <span class="opt">(the image to print on the card)</span></label>
       <input type="file" id="c-artwork" accept="image/png,image/jpeg,image/webp">
+
+      <label class="tight">Which way round is your photo?</label>
+      <div class="radio-row">
+        <label><input type="radio" name="c-orientation" value="landscape" id="c-orientation-landscape" checked> Landscape (wider than tall)</label>
+        <label><input type="radio" name="c-orientation" value="portrait" id="c-orientation-portrait"> Portrait (taller than wide)</label>
+      </div>
+
       <div class="howto">
-        Upload the image you want printed on the front of the card. We'll automatically
-        resize and convert it to a print-ready file at 8.5cm x 5.4cm (300 DPI) before
-        it's sent to production. JPG, PNG or WEBP - the sharper and higher-resolution the
-        original, the better it'll look printed. If your image is the wrong way round
-        (e.g. a portrait photo for this landscape card), we'll rotate it 90° first,
-        then fit the whole thing inside the card - nothing ever gets cropped or
-        sliced off. If it's not an exact match for the card's shape, we add a thin
-        border in a colour picked from your image so it blends in.
+        Upload the image you want printed on the front of the card, then tell us above
+        whether it's landscape or portrait - that's how we know for certain which way
+        to turn it, since phones and messaging apps often strip out the info we'd
+        otherwise use to guess automatically. We'll automatically resize and convert it
+        to a print-ready file at 8.5cm x 5.4cm (300 DPI) before it's sent to production.
+        JPG, PNG or WEBP - the sharper and higher-resolution the original, the better
+        it'll look printed. If your photo doesn't match this landscape card's shape,
+        we'll rotate it 90° first, then fit the whole thing inside the card - nothing
+        ever gets cropped or sliced off. If it's still not an exact match for the
+        card's shape, we add a thin border in a colour picked from your image so it
+        blends in.
       </div>
       <div class="artwork-status" id="c-artwork-status"></div>
       <img class="artwork-preview" id="c-artwork-preview" style="display:none;">
@@ -344,15 +354,25 @@
 
       <label>Upload your design <span class="opt">(the image to print on the card)</span></label>
       <input type="file" id="r-artwork" accept="image/png,image/jpeg,image/webp">
+
+      <label class="tight">Which way round is your photo?</label>
+      <div class="radio-row">
+        <label><input type="radio" name="r-orientation" value="landscape" id="r-orientation-landscape" checked> Landscape (wider than tall)</label>
+        <label><input type="radio" name="r-orientation" value="portrait" id="r-orientation-portrait"> Portrait (taller than wide)</label>
+      </div>
+
       <div class="howto">
-        Upload the image you want printed on the front of the card. We'll automatically
-        resize and convert it to a print-ready file at 8.5cm x 5.4cm (300 DPI) before
-        it's sent to production. JPG, PNG or WEBP - the sharper and higher-resolution the
-        original, the better it'll look printed. If your image is the wrong way round
-        (e.g. a portrait photo for this landscape card), we'll rotate it 90° first,
-        then fit the whole thing inside the card - nothing ever gets cropped or
-        sliced off. If it's not an exact match for the card's shape, we add a thin
-        border in a colour picked from your image so it blends in.
+        Upload the image you want printed on the front of the card, then tell us above
+        whether it's landscape or portrait - that's how we know for certain which way
+        to turn it, since phones and messaging apps often strip out the info we'd
+        otherwise use to guess automatically. We'll automatically resize and convert it
+        to a print-ready file at 8.5cm x 5.4cm (300 DPI) before it's sent to production.
+        JPG, PNG or WEBP - the sharper and higher-resolution the original, the better
+        it'll look printed. If your photo doesn't match this landscape card's shape,
+        we'll rotate it 90° first, then fit the whole thing inside the card - nothing
+        ever gets cropped or sliced off. If it's still not an exact match for the
+        card's shape, we add a thin border in a colour picked from your image so it
+        blends in.
       </div>
       <div class="artwork-status" id="r-artwork-status"></div>
       <img class="artwork-preview" id="r-artwork-preview" style="display:none;">
@@ -488,7 +508,7 @@ function normalizeOrientation(img, orientation) {
   return { el: canvas, w: canvas.width, h: canvas.height };
 }
 
-function processArtwork(file) {
+function processArtwork(file, userIsLandscape) {
   return new Promise(function (resolve, reject) {
     if (!file) { reject(new Error("No file selected")); return; }
     if (!/^image\//.test(file.type)) { reject(new Error("Please upload an image file")); return; }
@@ -508,6 +528,9 @@ function processArtwork(file) {
 
           // Correct for EXIF orientation first, so everything below works from
           // the photo the way it actually looks rather than the raw pixel grid.
+          // Note: apps like WhatsApp often strip EXIF data entirely when they
+          // compress a photo, so this can't always be relied on - that's why we
+          // also ask the customer directly (see userIsLandscape below).
           const normalized = normalizeOrientation(img, exifOrientation);
           const correctedSrc = normalized.el;
           const correctedW = normalized.w;
@@ -518,12 +541,15 @@ function processArtwork(file) {
           canvas.height = ARTWORK_PX_H;
           const ctx = canvas.getContext("2d");
 
-          // If the (now correctly-oriented) photo's shape doesn't match the card's
-          // shape (e.g. a portrait photo going on a landscape card), rotate it 90
-          // degrees so we're sizing down the whole image properly, not squashing a
-          // portrait photo into a thin landscape strip.
+          // If the photo's shape doesn't match the card's shape (e.g. a portrait
+          // photo going on a landscape card), rotate it 90 degrees so we're sizing
+          // down the whole image properly, not squashing a portrait photo into a
+          // thin landscape strip. We trust the customer's own landscape/portrait
+          // selection over guessing from pixel dimensions or EXIF, since that's
+          // the one signal that's always reliable regardless of what the uploading
+          // app did to the file.
           const targetIsLandscape = ARTWORK_PX_W > ARTWORK_PX_H;
-          const srcIsLandscape = correctedW > correctedH;
+          const srcIsLandscape = typeof userIsLandscape === "boolean" ? userIsLandscape : (correctedW > correctedH);
           let srcEl = correctedSrc;
           let srcW = correctedW;
           let srcH = correctedH;
@@ -585,7 +611,7 @@ function processArtwork(file) {
       };
       img.src = e.target.result;
     };
-    reader.readAsDataURL(file);
+    reader.readAsArrayBuffer(file);
   });
 }
 
@@ -597,6 +623,18 @@ function wireArtworkInput(inputId, statusId) {
   const previewEl = document.getElementById(inputId + "-preview");
   const downloadEl = document.getElementById(inputId + "-download");
 
+  // The landscape/portrait radio buttons for this upload - the customer's own
+  // answer, which we trust over guessing from the file itself.
+  const orientationGroupName = inputId.split("-")[0] + "-orientation";
+  const orientationRadios = document.getElementsByName(orientationGroupName);
+
+  function getUserIsLandscape() {
+    for (let i = 0; i < orientationRadios.length; i++) {
+      if (orientationRadios[i].checked) return orientationRadios[i].value === "landscape";
+    }
+    return true; // landscape is the default-checked option
+  }
+
   function resetPreview() {
     if (downloadUrl) {
       URL.revokeObjectURL(downloadUrl);
@@ -606,7 +644,7 @@ function wireArtworkInput(inputId, statusId) {
     if (downloadEl) { downloadEl.style.display = "none"; downloadEl.removeAttribute("href"); }
   }
 
-  input.addEventListener("change", function () {
+  function runProcessing() {
     const file = input.files && input.files[0];
     artworkData = null;
     resetPreview();
@@ -616,7 +654,7 @@ function wireArtworkInput(inputId, statusId) {
     }
     statusEl.textContent = "Processing image...";
     statusEl.style.color = "var(--text-dim)";
-    processArtwork(file).then(function (result) {
+    processArtwork(file, getUserIsLandscape()).then(function (result) {
       artworkData = result;
       statusEl.textContent = "Ready - converted to a " + ARTWORK_PX_W + "x" + ARTWORK_PX_H + "px print file (" + result.sizeKB + " KB)" + (result.rotated ? ", rotated 90° so the whole photo fits the card properly" : "") + ". This is exactly what would be sent to print - have a look below before ordering.";
       statusEl.style.color = "var(--lime)";
@@ -634,7 +672,17 @@ function wireArtworkInput(inputId, statusId) {
       statusEl.textContent = (err && err.message ? err.message : "Couldn't process that image") + " - try a different file.";
       statusEl.style.color = "#ff6b6b";
     });
-  });
+  }
+
+  input.addEventListener("change", runProcessing);
+  // If the customer changes the landscape/portrait answer after already
+  // uploading a photo, reprocess it with the corrected orientation instead of
+  // making them re-upload.
+  for (let i = 0; i < orientationRadios.length; i++) {
+    orientationRadios[i].addEventListener("change", function () {
+      if (input.files && input.files[0]) runProcessing();
+    });
+  }
 
   return {
     get: function () { return artworkData; },
