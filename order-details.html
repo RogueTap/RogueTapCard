@@ -179,6 +179,25 @@
     min-height: 16px;
     color: var(--text-dim);
   }
+  .artwork-preview {
+    display: block;
+    max-width: 240px;
+    width: 100%;
+    aspect-ratio: 8.5 / 5.4;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #333;
+    margin-top: 10px;
+  }
+  .artwork-download {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 12.5px;
+    color: var(--lime);
+    text-decoration: none;
+    border-bottom: 1px solid var(--lime);
+  }
+  .artwork-download:hover { opacity: 0.8; }
   .hidden { display: none; }
   .footer {
     text-align: center;
@@ -246,6 +265,8 @@
         the card, we'll crop it centered to fit.
       </div>
       <div class="artwork-status" id="c-artwork-status"></div>
+      <img class="artwork-preview" id="c-artwork-preview" style="display:none;">
+      <a class="artwork-download" id="c-artwork-download" style="display:none;">Download the print-ready TIFF file</a>
 
       <div class="section-label">Shipping address</div>
 
@@ -328,6 +349,8 @@
         the card, we'll crop it centered to fit.
       </div>
       <div class="artwork-status" id="r-artwork-status"></div>
+      <img class="artwork-preview" id="r-artwork-preview" style="display:none;">
+      <a class="artwork-download" id="r-artwork-download" style="display:none;">Download the print-ready TIFF file</a>
 
       <div class="section-label">Shipping address</div>
 
@@ -427,6 +450,8 @@ function processArtwork(file) {
           ctx.clearRect(0, 0, ARTWORK_PX_W, ARTWORK_PX_H);
           ctx.drawImage(img, sx, sy, sw, sh, 0, 0, ARTWORK_PX_W, ARTWORK_PX_H);
 
+          const previewDataUrl = canvas.toDataURL("image/png");
+
           const imageData = ctx.getImageData(0, 0, ARTWORK_PX_W, ARTWORK_PX_H);
           const tiffBuffer = UTIF.encodeImage(imageData.data, ARTWORK_PX_W, ARTWORK_PX_H);
           const blob = new Blob([tiffBuffer], { type: "image/tiff" });
@@ -435,7 +460,7 @@ function processArtwork(file) {
           const blobReader = new FileReader();
           blobReader.onerror = function () { reject(new Error("Couldn't finish processing that image")); };
           blobReader.onload = function (be) {
-            resolve({ dataUrl: be.target.result, sizeKB: sizeKB });
+            resolve({ dataUrl: be.target.result, sizeKB: sizeKB, previewDataUrl: previewDataUrl, tiffBlob: blob });
           };
           blobReader.readAsDataURL(blob);
         } catch (err) {
@@ -450,12 +475,25 @@ function processArtwork(file) {
 
 function wireArtworkInput(inputId, statusId) {
   let artworkData = null;
+  let downloadUrl = null;
   const input = document.getElementById(inputId);
   const statusEl = document.getElementById(statusId);
+  const previewEl = document.getElementById(inputId + "-preview");
+  const downloadEl = document.getElementById(inputId + "-download");
+
+  function resetPreview() {
+    if (downloadUrl) {
+      URL.revokeObjectURL(downloadUrl);
+      downloadUrl = null;
+    }
+    if (previewEl) { previewEl.style.display = "none"; previewEl.removeAttribute("src"); }
+    if (downloadEl) { downloadEl.style.display = "none"; downloadEl.removeAttribute("href"); }
+  }
 
   input.addEventListener("change", function () {
     const file = input.files && input.files[0];
     artworkData = null;
+    resetPreview();
     if (!file) {
       statusEl.textContent = "";
       return;
@@ -464,8 +502,18 @@ function wireArtworkInput(inputId, statusId) {
     statusEl.style.color = "var(--text-dim)";
     processArtwork(file).then(function (result) {
       artworkData = result;
-      statusEl.textContent = "Ready - converted to a " + ARTWORK_PX_W + "x" + ARTWORK_PX_H + "px print file (" + result.sizeKB + " KB).";
+      statusEl.textContent = "Ready - converted to a " + ARTWORK_PX_W + "x" + ARTWORK_PX_H + "px print file (" + result.sizeKB + " KB). This is exactly what would be sent to print - have a look below before ordering.";
       statusEl.style.color = "var(--lime)";
+      if (previewEl && result.previewDataUrl) {
+        previewEl.src = result.previewDataUrl;
+        previewEl.style.display = "block";
+      }
+      if (downloadEl && result.tiffBlob) {
+        downloadUrl = URL.createObjectURL(result.tiffBlob);
+        downloadEl.href = downloadUrl;
+        downloadEl.download = "roguetap-card-artwork.tif";
+        downloadEl.style.display = "inline-block";
+      }
     }).catch(function (err) {
       statusEl.textContent = (err && err.message ? err.message : "Couldn't process that image") + " - try a different file.";
       statusEl.style.color = "#ff6b6b";
