@@ -421,6 +421,73 @@ const ARTWORK_CM_H = 5.4;
 const ARTWORK_PX_W = Math.round(ARTWORK_CM_W / 2.54 * ARTWORK_DPI); // 1004px
 const ARTWORK_PX_H = Math.round(ARTWORK_CM_H / 2.54 * ARTWORK_DPI); // 638px
 
+// Phones and apps often store a photo's raw pixels in one orientation plus an
+// EXIF tag telling viewers "display this rotated" - normal photo viewers (and
+// Windows/phone thumbnails) read that tag and show it the right way round, but
+// code that just looks at the raw pixel width/height can get it backwards. We
+// read that tag ourselves first so every later decision is based on the photo
+// the way it actually looks, not the raw file underneath it.
+function getExifOrientation(buffer) {
+  try {
+    const view = new DataView(buffer);
+    if (view.getUint16(0, false) !== 0xFFD8) return 1;
+    let offset = 2;
+    const length = view.byteLength;
+    while (offset < length - 1) {
+      const marker = view.getUint16(offset, false);
+      if (marker === 0xFFE1) {
+        const exifStart = offset + 4;
+        if (view.getUint32(exifStart, false) !== 0x45786966) return 1;
+        const tiffOffset = exifStart + 6;
+        const little = view.getUint16(tiffOffset, false) === 0x4949;
+        const firstIFDOffset = view.getUint32(tiffOffset + 4, little);
+        const dirOffset = tiffOffset + firstIFDOffset;
+        const tagCount = view.getUint16(dirOffset, little);
+        for (let i = 0; i < tagCount; i++) {
+          const entryOffset = dirOffset + 2 + i * 12;
+          if (view.getUint16(entryOffset, little) === 0x0112) {
+            return view.getUint16(entryOffset + 8, little);
+          }
+        }
+        return 1;
+      }
+      if ((marker & 0xFF00) !== 0xFF00) break;
+      const segLength = view.getUint16(offset + 2, false);
+      offset += 2 + segLength;
+    }
+  } catch (e) {}
+  return 1;
+}
+
+function normalizeOrientation(img, orientation) {
+  const w = img.naturalWidth || img.width;
+  const h = img.naturalHeight || img.height;
+  if (!orientation || orientation === 1) {
+    return { el: img, w: w, h: h };
+  }
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (orientation >= 5 && orientation <= 8) {
+    canvas.width = h;
+    canvas.height = w;
+  } else {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  switch (orientation) {
+    case 2: ctx.transform(-1, 0, 0, 1, w, 0); break;
+    case 3: ctx.transform(-1, 0, 0, -1, w, h); break;
+    case 4: ctx.transform(1, 0, 0, -1, 0, h); break;
+    case 5: ctx.transform(0, 1, 1, 0, 0, 0); break;
+    case 6: ctx.transform(0, 1, -1, 0, h, 0); break;
+    case 7: ctx.transform(0, -1, -1, 0, h, w); break;
+    case 8: ctx.transform(0, -1, 1, 0, 0, w); break;
+    default: break;
+  }
+  ctx.drawImage(img, 0, 0);
+  return { el: canvas, w: canvas.width, h: canvas.height };
+}
+
 function processArtwork(file) {
   return new Promise(function (resolve, reject) {
     if (!file) { reject(new Error("No file selected")); return; }
@@ -429,33 +496,46 @@ function processArtwork(file) {
     const reader = new FileReader();
     reader.onerror = function () { reject(new Error("Couldn't read that file")); };
     reader.onload = function (e) {
+      const buffer = e.target.result;
+      const exifOrientation = getExifOrientation(buffer);
+      const blobUrl = URL.createObjectURL(new Blob([buffer], { type: file.type }));
+
       const img = new Image();
-      img.onerror = function () { reject(new Error("Couldn't open that image")); };
+      img.onerror = function () { URL.revokeObjectURL(blobUrl); reject(new Error("Couldn't open that image")); };
       img.onload = function () {
         try {
+          URL.revokeObjectURL(blobUrl);
+
+          // Correct for EXIF orientation first, so everything below works from
+          // the photo the way it actually looks rather than the raw pixel grid.
+          const normalized = normalizeOrientation(img, exifOrientation);
+          const correctedSrc = normalized.el;
+          const correctedW = normalized.w;
+          const correctedH = normalized.h;
+
           const canvas = document.getElementById("artwork-canvas");
           canvas.width = ARTWORK_PX_W;
           canvas.height = ARTWORK_PX_H;
           const ctx = canvas.getContext("2d");
 
-          // If the uploaded photo's orientation doesn't match the card's orientation
-          // (e.g. a portrait photo going on a landscape card), rotate it 90 degrees
-          // first so we're sizing down the whole image properly, not chopping a
+          // If the (now correctly-oriented) photo's shape doesn't match the card's
+          // shape (e.g. a portrait photo going on a landscape card), rotate it 90
+          // degrees so we're sizing down the whole image properly, not squashing a
           // portrait photo into a thin landscape strip.
           const targetIsLandscape = ARTWORK_PX_W > ARTWORK_PX_H;
-          const srcIsLandscape = img.width > img.height;
-          let srcEl = img;
-          let srcW = img.width;
-          let srcH = img.height;
+          const srcIsLandscape = correctedW > correctedH;
+          let srcEl = correctedSrc;
+          let srcW = correctedW;
+          let srcH = correctedH;
           let rotated = false;
           if (targetIsLandscape !== srcIsLandscape) {
             const rotCanvas = document.createElement("canvas");
-            rotCanvas.width = img.height;
-            rotCanvas.height = img.width;
+            rotCanvas.width = correctedH;
+            rotCanvas.height = correctedW;
             const rctx = rotCanvas.getContext("2d");
             rctx.translate(rotCanvas.width / 2, rotCanvas.height / 2);
             rctx.rotate(Math.PI / 2);
-            rctx.drawImage(img, -img.width / 2, -img.height / 2);
+            rctx.drawImage(correctedSrc, -correctedW / 2, -correctedH / 2);
             srcEl = rotCanvas;
             srcW = rotCanvas.width;
             srcH = rotCanvas.height;
