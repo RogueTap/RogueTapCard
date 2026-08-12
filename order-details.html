@@ -609,7 +609,7 @@ function processArtwork(file, userIsLandscape) {
           reject(err);
         }
       };
-      img.src = e.target.result;
+      img.src = blobUrl;
     };
     reader.readAsArrayBuffer(file);
   });
