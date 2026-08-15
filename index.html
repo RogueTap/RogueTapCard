@@ -215,6 +215,19 @@ if (!fields.name) {
   try {
     const lines = ["BEGIN:VCARD", "VERSION:3.0"];
     lines.push(`FN:${fields.name}`);
+    // N (structured Family;Given;Additional;Prefix;Suffix) is technically
+    // required by the vCard spec even though FN covers display purposes.
+    // Without it, some parsers - iOS Contacts included - fall back to
+    // filing the card under ORG instead of the person's name, which is
+    // exactly what happened: a card for "Jay" with company "Rogue Tap"
+    // got saved into the phone as a contact named "Rogue Tap". Splitting
+    // on the last space is a rough approximation (no explicit first/last
+    // fields are collected), but it's enough to stop ORG being mistaken
+    // for the primary name.
+    const nameParts = fields.name.trim().split(/\s+/);
+    const givenName = nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : nameParts[0];
+    const familyName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+    lines.push(`N:${familyName};${givenName};;;`);
     if (fields.company) lines.push(`ORG:${fields.company}`);
     if (fields.title) lines.push(`TITLE:${fields.title}`);
     if (phoneNumber) lines.push(`TEL;TYPE=CELL:${phoneNumber}`);
