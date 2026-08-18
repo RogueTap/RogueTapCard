@@ -4,7 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rogue Tap - Add to Contacts</title>
-<meta name="robots" content="noindex">
+<script>
+(function(){
+  if (new URLSearchParams(location.search).get('n')) {
+    var m = document.createElement('meta');
+    m.name = 'robots';
+    m.content = 'noindex';
+    document.head.appendChild(m);
+  }
+})();
+</script>
 <meta name="google-site-verification" content="FcyQdMatvJ7l7OA8l2jFv94kaHTPq-OiRTiRDMx7brY" />
 <style>
   :root {
