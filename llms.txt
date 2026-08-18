@@ -1,0 +1,17 @@
+# Rogue Tap
+
+> Rogue Tap makes reusable NFC tap-to-share cards for UK businesses: digital business cards, plus countertop Google Review and TripAdvisor review plates. Tap a phone against the card and contact details, socials, or a review page open instantly - no app required, works on Android and iPhone.
+
+## Products
+- Business card (£19.99 one-time + £3.00/quarter to keep it rewritable): name, title, company, phone, email, website, socials.
+- 2 business cards (£29.99 one-time + £4.50/quarter): second card half price.
+- Google Review card/plate (£19.99 one-off, no subscription): taps straight to a business's Google Review page.
+- TripAdvisor Review card/plate (£19.99 one-off, no subscription): same idea, for TripAdvisor.
+
+## Pages
+- [Home](https://roguetap.com/home.html): product overview, how it works
+- [Order](https://roguetap.com/order.html): pricing and checkout
+- [FAQ](https://roguetap.com/faq.html): common questions
+
+## Contact
+roguetap@outlook.com
