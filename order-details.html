@@ -6,6 +6,9 @@
 <title>Rogue Tap - Card details</title>
 <meta name="robots" content="noindex">
 <link rel="canonical" href="https://roguetap.com/order-details.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root {
 --lime: #d4f900;
@@ -253,6 +256,23 @@ receive your order once payment has actually gone through.
 <label id="c-notesLabel" class="hidden">Notes for your order <span class="opt">(optional)</span></label>
 <textarea id="c-notes" class="hidden" placeholder="e.g. different details for your second card, or anything else we should know"></textarea>
 
+<div class="section-label">Your card design</div>
+
+<div class="radio-row" id="c-tier-row">
+<label><input type="radio" name="c-tier" value="basic" id="c-tier-basic" checked> Basic <span class="opt">(included)</span></label>
+<label style="opacity:.45;cursor:not-allowed;"><input type="radio" name="c-tier" value="premium" id="c-tier-premium" disabled> Premium +£5 <span class="opt">(upload your own design - coming soon)</span></label>
+</div>
+
+<div id="c-basic-block">
+<label class="tight">What your card will look like</label>
+<div style="background:#0f0f0f;border:1px solid #333;border-radius:10px;padding:16px;text-align:center;margin-top:6px;">
+<canvas id="basic-preview-canvas" width="1004" height="638" style="display:none;"></canvas>
+<img id="basic-preview-img" alt="Your card preview" style="display:block;width:100%;max-width:320px;margin:0 auto;border-radius:8px;">
+</div>
+<div class="howto">We print your name and business name in this exact style automatically - there’s nothing for you to design or upload. Fill in "Full name" and "Company" above and the preview updates to show your actual card.</div>
+</div>
+
+<div id="c-premium-block" class="hidden">
 <div class="section-label">Your card artwork</div>
 
 <label>Upload your design <span class="opt">(the image to print on the card)</span></label>
@@ -280,6 +300,9 @@ blends in.
 <div class="artwork-status" id="c-artwork-status"></div>
 <img class="artwork-preview" id="c-artwork-preview" style="display:none;">
 <a class="artwork-download" id="c-artwork-download" style="display:none;">Download the print-ready TIFF file</a>
+
+
+</div>
 
 <div class="section-label">Shipping address</div>
 
@@ -662,9 +685,135 @@ isProcessing: function () { return input.files && input.files[0] && !artworkData
 };
 }
 
+const BASIC_CARD_FONT = '"Playfair Display", Georgia, serif';
+function loadBasicCardFonts() {
+  return Promise.all([
+    document.fonts.load('700 90px ' + BASIC_CARD_FONT),
+    document.fonts.load('500 40px ' + BASIC_CARD_FONT)
+  ]);
+}
+function drawSpacedText(ctx, text, cx, y, letterSpacing) {
+  const chars = text.split("");
+  let totalWidth = 0;
+  const widths = chars.map(function (ch) {
+    const w = ctx.measureText(ch).width;
+    totalWidth += w + letterSpacing;
+    return w;
+  });
+  totalWidth -= letterSpacing;
+  let x = cx - totalWidth / 2;
+  chars.forEach(function (ch, i) {
+    ctx.fillText(ch, x + widths[i] / 2, y);
+    x += widths[i] + letterSpacing;
+  });
+}
+function measureSpacedWidth(ctx, text, letterSpacing) {
+  let w = 0;
+  text.split("").forEach(function (ch) { w += ctx.measureText(ch).width + letterSpacing; });
+  return w - letterSpacing;
+}
+function fitFontSize(ctx, text, weight, maxWidth, startSize, minSize, letterSpacing) {
+  let size = startSize;
+  while (size > minSize) {
+    ctx.font = weight + " " + size + "px " + BASIC_CARD_FONT;
+    if (measureSpacedWidth(ctx, text, letterSpacing) <= maxWidth) break;
+    size -= 2;
+  }
+  return size;
+}
+function drawBasicCardDesign(canvas, fullName, company) {
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, W, H);
+  const name = (fullName || "YOUR NAME").toUpperCase();
+  const biz = (company || "YOUR BUSINESS").toUpperCase();
+  const maxTextWidth = W * 0.82;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = "#fff";
+  const nameSize = fitFontSize(ctx, name, 700, maxTextWidth, 68, 28, 6);
+  ctx.font = "700 " + nameSize + "px " + BASIC_CARD_FONT;
+  const nameY = H * 0.46;
+  drawSpacedText(ctx, name, W / 2, nameY, 6);
+  const lineY = nameY + nameSize * 0.42;
+  const lineW = Math.min(W * 0.34, 260);
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(W / 2 - lineW / 2, lineY);
+  ctx.lineTo(W / 2 + lineW / 2, lineY);
+  ctx.stroke();
+  const bizSize = fitFontSize(ctx, biz, 500, maxTextWidth * 0.75, 26, 14, 4);
+  ctx.font = "500 " + bizSize + "px " + BASIC_CARD_FONT;
+  const bizY = lineY + bizSize + 22;
+  const bizWidth = measureSpacedWidth(ctx, biz, 4);
+  const dashW = 26, dashGap = 14;
+  drawSpacedText(ctx, biz, W / 2, bizY, 4);
+  ctx.beginPath();
+  ctx.moveTo(W / 2 - bizWidth / 2 - dashGap - dashW, bizY - bizSize * 0.32);
+  ctx.lineTo(W / 2 - bizWidth / 2 - dashGap, bizY - bizSize * 0.32);
+  ctx.moveTo(W / 2 + bizWidth / 2 + dashGap, bizY - bizSize * 0.32);
+  ctx.lineTo(W / 2 + bizWidth / 2 + dashGap + dashW, bizY - bizSize * 0.32);
+  ctx.stroke();
+}
+function renderBasicCardArtwork(fullName, company) {
+  return loadBasicCardFonts().then(function () {
+    return new Promise(function (resolve, reject) {
+      try {
+        const canvas = document.getElementById("basic-preview-canvas");
+        canvas.width = ARTWORK_PX_W;
+        canvas.height = ARTWORK_PX_H;
+        drawBasicCardDesign(canvas, fullName, company);
+        const img = document.getElementById("basic-preview-img");
+        if (img) img.src = canvas.toDataURL("image/png");
+        const ctx = canvas.getContext("2d");
+        const imageData = ctx.getImageData(0, 0, ARTWORK_PX_W, ARTWORK_PX_H);
+        const tiffBuffer = UTIF.encodeImage(imageData.data, ARTWORK_PX_W, ARTWORK_PX_H);
+        const blob = new Blob([tiffBuffer], { type: "image/tiff" });
+        const sizeKB = Math.round(blob.size / 1024);
+        const reader = new FileReader();
+        reader.onerror = function () { reject(new Error("Couldn't generate the card design")); };
+        reader.onload = function (ev) { resolve({ dataUrl: ev.target.result, sizeKB: sizeKB }); };
+        reader.readAsDataURL(blob);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
+}
+function updateBasicPreview() {
+  const nameEl = document.getElementById("c-fullname");
+  const companyEl = document.getElementById("c-company");
+  const canvas = document.getElementById("basic-preview-canvas");
+  const img = document.getElementById("basic-preview-img");
+  if (!canvas || !img) return;
+  loadBasicCardFonts().then(function () {
+    drawBasicCardDesign(canvas, nameEl ? nameEl.value.trim() : "", companyEl ? companyEl.value.trim() : "");
+    img.src = canvas.toDataURL("image/png");
+  });
+}
+
 const cArtwork = wireArtworkInput("c-artwork", "c-artwork-status");
 if (product === "card1" || product === "card2") {
 cardForm.classList.remove("hidden");
+const cTierBasic = document.getElementById("c-tier-basic");
+const cTierPremium = document.getElementById("c-tier-premium");
+const cBasicBlock = document.getElementById("c-basic-block");
+const cPremiumBlock = document.getElementById("c-premium-block");
+function updateTierBlocks() {
+  const premium = cTierPremium && cTierPremium.checked;
+  if (cBasicBlock) cBasicBlock.classList.toggle("hidden", !!premium);
+  if (cPremiumBlock) cPremiumBlock.classList.toggle("hidden", !premium);
+}
+if (cTierBasic) cTierBasic.addEventListener("change", updateTierBlocks);
+if (cTierPremium) cTierPremium.addEventListener("change", updateTierBlocks);
+updateTierBlocks();
+["c-fullname", "c-company"].forEach(function (id) {
+  const fld = document.getElementById(id);
+  if (fld) fld.addEventListener("input", updateBasicPreview);
+});
+updateBasicPreview();
 if (product === "card2") {
 document.getElementById("c-notesLabel").classList.remove("hidden");
 document.getElementById("c-notes").classList.remove("hidden");
@@ -684,6 +833,8 @@ errEl.textContent = "Please fill in all required fields.";
 errEl.style.display = "block";
 return;
 }
+const cTierIsPremium = document.getElementById("c-tier-premium") && document.getElementById("c-tier-premium").checked;
+if (cTierIsPremium) {
 if (cArtwork.isProcessing()) {
 errEl.textContent = "Still processing your uploaded image - give it a second and try again.";
 errEl.style.display = "block";
@@ -693,6 +844,7 @@ if (!cArtwork.get()) {
 errEl.textContent = "Please upload an image for your card artwork.";
 errEl.style.display = "block";
 return;
+}
 }
 errEl.style.display = "none";
 const btn = document.getElementById("c-submit");
@@ -717,10 +869,23 @@ savePendingOrder({
 "Country": document.getElementById("c-country").value.trim()
 });
 
-const cArtworkResult = cArtwork.get();
-localStorage.setItem("rt_pending_artwork", JSON.stringify({ dataUrl: cArtworkResult.dataUrl, sizeKB: cArtworkResult.sizeKB }));
-
+function goToPaymentWithArtwork(artworkResult) {
+localStorage.setItem("rt_pending_artwork", JSON.stringify({ dataUrl: artworkResult.dataUrl, sizeKB: artworkResult.sizeKB }));
 window.location.href = STRIPE_LINKS[product];
+}
+if (cTierIsPremium) {
+goToPaymentWithArtwork(cArtwork.get());
+} else {
+renderBasicCardArtwork(
+document.getElementById("c-fullname").value.trim(),
+document.getElementById("c-company").value.trim()
+).then(goToPaymentWithArtwork).catch(function () {
+errEl.textContent = "Couldn’t generate your card design - please try again.";
+errEl.style.display = "block";
+btn.disabled = false;
+btn.textContent = "Continue to payment";
+});
+}
 });
 
 } else if (product === "google" || product === "tripadvisor") {
